@@ -974,30 +974,31 @@ function applyExplosion(x,y, radius, damage){
    - (6) 시너지 탄환은 "각 시너지별로 따로" 발사
    - (3) 닌자도 시너지 탄환 발사 (버그 수정)
 ========================= */
-function fireBulletFrom(x,y, target, dmg, speed, tags, pierce, radius=4, life=2.1){
-  const ang = Math.atan2(target.y-y, target.x-x);
+// ✅ 호환용: 다른 버전에서 쓰던 이름
+function fireBulletTowards(target, dmg, speed, tags=[], pierce=0, radius=4, life=2.0){
+  return fireBulletFrom(player.x, player.y, target, dmg, speed, tags, pierce, radius, life);
+}
+
+// ✅ 호환용: 다른 버전에서 쓰던 이름
+function spawnEnemyNear(x, y, opts = {}){
+  return spawnEnemyAt(x + rand(-16,16), y + rand(-16,16), opts);
+}
+
+function fireBulletFrom(x, y, target, dmg, speed, tags, pierce, radius=4, life=2.1){
+  const ang = Math.atan2(target.y - y, target.x - x);
   bullets.push({
-    x,y,
-    vx:Math.cos(ang)*speed,
-    vy:Math.sin(ang)*speed,
-    r:radius,
+    x, y,
+    vx: Math.cos(ang) * speed,
+    vy: Math.sin(ang) * speed,
+    r: radius,
     dmg,
-    tags:new Set(tags),
+    tags: new Set(tags),
     pierce,
-    hitSet:new Set(),
+    hitSet: new Set(),
     life,
   });
 }
 
-function nearestEnemy(){
-  if (!enemies.length) return null;
-  let best=enemies[0], bestD=dist2(player.x,player.y,enemies[0].x,enemies[0].y);
-  for (let i=1;i<enemies.length;i++){
-    const d=dist2(player.x,player.y,enemies[i].x,enemies[i].y);
-    if (d<bestD){ bestD=d; best=enemies[i]; }
-  }
-  return best;
-}
 
 // ✅ 탄환별 쿨다운(각 발사채널 분리)
 state.shootCdBase = 0;
