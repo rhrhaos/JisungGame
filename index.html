@@ -119,10 +119,30 @@
     <div class="row" style="margin-top:12px;">
       <button id="retryBtn">다시하기</button>
       <button id="copyBtn">런 결과 복사(리더보드용)</button>
+      <button id="submitBtn">온라인 등록</button>
     </div>
     <div class="small">※ 온라인 저장은 payload를 서버에 저장하는 방식(A안)</div>
   </div>
 </div>
+
+
+<div id="leader" class="overlay">
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <h3 style="margin:0;">리더보드</h3>
+      <div class="row" style="margin:0;gap:8px;">
+        <button id="lbRefresh">새로고침</button>
+        <button id="lbClose">닫기</button>
+      </div>
+    </div>
+    <div class="small" style="margin-top:8px;opacity:.85;">
+      점수 기준 TOP 20 · 익명 로그인(Anonymous Auth) 사용
+    </div>
+    <div id="lbStatus" class="small" style="margin-top:10px;opacity:.85;"></div>
+    <div id="lbList" style="margin-top:10px;display:grid;gap:8px;"></div>
+  </div>
+</div>
+
 
 <div id="start" class="center">
   <div class="panel">
@@ -534,6 +554,91 @@ document.getElementById("copyBtn").onclick = () => {
   navigator.clipboard.writeText(JSON.stringify(payload,null,2));
   showToast("복사됨!", 0.9);
 };
+
+// ✅ 온라인 등록 / 리더보드 UI
+const leaderEl = document.getElementById("leader");
+const lbList = document.getElementById("lbList");
+const lbStatus = document.getElementById("lbStatus");
+
+function openLeaderboard(){
+  leaderEl.style.display="flex";
+  refreshLeaderboard();
+}
+function closeLeaderboard(){
+  leaderEl.style.display="none";
+}
+document.getElementById("lbClose").onclick = closeLeaderboard;
+document.getElementById("lbRefresh").onclick = refreshLeaderboard;
+
+// Tab 키로 도감이 이미 있다면 충돌날 수 있으니, 게임오버 화면에서만 리더보드 열기(버튼으로)
+document.getElementById("submitBtn").onclick = async () => {
+  const payload = buildRunPayload();
+  try{
+    lbStatus.textContent = "업로드 중...";
+    await (window.submitRun ? window.submitRun(payload) : Promise.reject(new Error("submitRun 미구현")));
+    showToast("온라인 등록 완료!", 1.0);
+    openLeaderboard();
+  }catch(err){
+    console.error(err);
+    showToast("온라인 등록 실패(콘솔 확인)", 1.2);
+    lbStatus.textContent = "업로드 실패: " + (err?.message ?? err);
+  }
+};
+
+async function refreshLeaderboard(){
+  if (!window.fetchLeaderboard){
+    lbStatus.textContent = "Firebase 연결 전입니다. 아래 안내대로 연결하세요.";
+    return;
+  }
+  lbStatus.textContent = "불러오는 중...";
+  lbList.innerHTML = "";
+  try{
+    const rows = await window.fetchLeaderboard();
+    lbStatus.textContent = rows.length ? "" : "기록이 아직 없습니다.";
+    rows.forEach((r, i) => {
+      const div = document.createElement("div");
+      div.style.display = "flex";
+      div.style.alignItems = "center";
+      div.style.justifyContent = "space-between";
+      div.style.gap = "10px";
+      div.style.padding = "10px 12px";
+      div.style.border = "1px solid #333";
+      div.style.borderRadius = "12px";
+      div.style.background = "rgba(0,0,0,.35)";
+
+      const left = document.createElement("div");
+      left.innerHTML = `<b>#${i+1} ${escapeHtml(r.nickname ?? "Player")}</b>
+        <div class="small" style="margin-top:3px;opacity:.8;">
+          ${escapeHtml(r.characterLabel ?? "-")} · Lv.${r.level ?? "-"} · 킬 ${r.kills ?? 0} (엘리트 ${r.eliteKills ?? 0})
+        </div>`;
+
+      const right = document.createElement("div");
+      right.style.textAlign = "right";
+      right.innerHTML = `<b>${Math.floor(r.score ?? 0)}</b>
+        <div class="small" style="margin-top:3px;opacity:.8;">${formatMs(r.timePlayed ?? 0)}</div>`;
+
+      div.appendChild(left);
+      div.appendChild(right);
+      lbList.appendChild(div);
+    });
+  }catch(err){
+    console.error(err);
+    lbStatus.textContent = "불러오기 실패: " + (err?.message ?? err);
+  }
+}
+
+// 간단 sanitize
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+function formatMs(ms){
+  const sec = Math.floor((ms||0)/1000);
+  const m = Math.floor(sec/60);
+  const s = String(sec%60).padStart(2,"0");
+  return `${m}:${s}`;
+}
+
+
 
 function buildRunPayload(){
   return {
@@ -2606,5 +2711,60 @@ updateGearAuras = function(dt){
 };
 
 </script>
+
+<script type="module">
+  // Firebase Web SDK (modular)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  const firebaseConfig = {
+  "apiKey": "AIzaSyA_SyhZFH_d5Qc_6U0Fc2zag2pk8I2TRI0",
+  "authDomain": "survivor-24258.firebaseapp.com",
+  "projectId": "survivor-24258",
+  "storageBucket": "survivor-24258.firebasestorage.app",
+  "messagingSenderId": "338760669876",
+  "appId": "1:338760669876:web:473331e5938814c9e615e1",
+  "measurementId": "G-E3675VFT5K"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // 익명 로그인(리더보드 쓰기 권한용)
+  signInAnonymously(auth).catch((e)=>console.error("Anonymous auth failed:", e));
+
+  // ✅ 게임 스크립트에서 호출하는 함수들을 window에 노출
+  window.submitRun = async (payload) => {
+    // 최소 검증(클라) — 서버 규칙도 꼭 걸어야 함
+    const nickname = String(payload.nickname ?? "Player").slice(0, 16).trim() || "Player";
+    const character = (payload.character === "ninja") ? "ninja" : "ranged";
+    const doc = {
+      nickname,
+      character,
+      characterLabel: (character==="ninja") ? "닌자" : "원거리",
+      score: Math.floor(payload.score ?? 0),
+      kills: Math.floor(payload.kills ?? 0),
+      eliteKills: Math.floor(payload.eliteKills ?? 0),
+      level: Math.floor(payload.level ?? 1),
+      cleared: !!payload.cleared,
+      timePlayed: Math.floor(payload.timePlayed ?? 0),
+      // 선택: 빌드 기록(크면 제거해도 됨)
+      synergies: payload.synergies ?? [],
+      gears: payload.gears ?? [],
+      createdAt: serverTimestamp(),
+    };
+    await addDoc(collection(db, "runs"), doc);
+  };
+
+  window.fetchLeaderboard = async () => {
+    const q = query(collection(db, "runs"), orderBy("score", "desc"), orderBy("createdAt", "desc"), limit(20));
+    const snap = await getDocs(q);
+    const out = [];
+    snap.forEach(d => out.push(d.data()));
+    return out;
+  };
+</script>
+
 </body>
 </html>
