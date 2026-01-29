@@ -160,6 +160,27 @@
 </div>
 
 <script>
+
+// ===== Compatibility / Safety polyfills (added) =====
+if (typeof window.fireBulletTowards !== "function") {
+  window.fireBulletTowards = function fireBulletTowards(target, dmg, speed, tags=[], pierce=0, radius=4, life=2.0){
+    // will be rebound once fireBulletFrom exists
+    if (typeof window.fireBulletFrom === "function" && window.player) {
+      return window.fireBulletFrom(window.player.x, window.player.y, target, dmg, speed, tags, pierce, radius, life);
+    }
+  };
+}
+if (typeof window.spawnEnemyNear !== "function") {
+  window.spawnEnemyNear = function spawnEnemyNear(x, y, opts = {}){
+    if (typeof window.spawnEnemyAt === "function" && typeof window.rand === "function") {
+      return window.spawnEnemyAt(x + window.rand(-16,16), y + window.rand(-16,16), opts);
+    }
+  };
+}
+// Prevent a single error from freezing the main loop
+window.__safeCall = (fn, ...args) => { try { return fn(...args); } catch(e){ console.error(e); return null; } };
+// ================================================
+
 /* =========================
    라벨 / 텍스트
 ========================= */
@@ -206,6 +227,20 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist2=(ax,ay,bx,by)=>{const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy;};
 const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx, ay-by);
 const norm=(dx,dy)=>{const d=Math.hypot(dx,dy)||1; return {x:dx/d,y:dy/d,d};};
+
+// ✅ nearest enemy helper (auto-aim / targeting)
+function nearestEnemy(fromX = player?.x ?? 0, fromY = player?.y ?? 0){
+  if (!enemies || enemies.length === 0) return null;
+  let best = null;
+  let bestD = Infinity;
+  for (const e of enemies){
+    if (!e || e.dead) continue;
+    const d = dist2(fromX, fromY, e.x, e.y);
+    if (d < bestD){ bestD = d; best = e; }
+  }
+  return best;
+}
+
 
 /* =========================
    도형 렌더 헬퍼(세모/별)
@@ -908,6 +943,14 @@ function gainXp(v){
     state.xp -= state.xpNeed;
     state.xpNeed = Math.floor(state.xpNeed * 1.35);
     state.level++;
+      // Midgame fun: after 3 minutes, every 2 levels grant a small free bonus (no UI choice needed)
+      if ((state.elapsed||0) >= 180 && state.level % 2 === 0){
+        const r = Math.random();
+        if (r < 0.30){ state.atk += 1.5; toast("각성: 공격력 +1.5"); }
+        else if (r < 0.55){ state.as += 0.25; toast("각성: 공격속도 +0.25"); }
+        else if (r < 0.75){ state.ms += 20; toast("각성: 이동속도 +20"); }
+        else { state.maxHp += 10; state.hp = Math.min(state.maxHp, state.hp + 10); toast("각성: 최대체력 +10"); }
+      }
     openLevelUp();
     break; // 레벨업 열면 pause 되므로 1회만
   }
@@ -2733,7 +2776,11 @@ updateGearAuras = function(dt){
   const auth = getAuth(app);
 
   // 익명 로그인(리더보드 쓰기 권한용)
-  signInAnonymously(auth).catch((e)=>console.error("Anonymous auth failed:", e));
+  // ※ Firebase 콘솔 > Authentication > Sign-in method에서 "익명"을 활성화해야 합니다.
+  window.__authOk = false;
+  signInAnonymously(auth)
+    .then(()=>{ window.__authOk = true; })
+    .catch((e)=>{ window.__authOk = false; console.warn("Anonymous auth disabled or misconfigured. Leaderboard write may not work.", e?.code || e); });
 
   // ✅ 게임 스크립트에서 호출하는 함수들을 window에 노출
   window.submitRun = async (payload) => {
@@ -2766,6 +2813,13 @@ updateGearAuras = function(dt){
     return out;
   };
 </script>
+
+
+<div id="optionsPanel" style="position:fixed;top:10px;right:10px;z-index:9999;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px;font:12px/1.3 system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', sans-serif;">
+  <div style="font-weight:700;margin-bottom:8px;">옵션</div>
+  <label style="display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer;"><input id="optSfx" type="checkbox" checked> SFX</label>
+  <label style="display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer;"><input id="optBgm" type="checkbox" checked> BGM</label>
+</div>
 
 </body>
 </html>
