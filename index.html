@@ -1,134 +1,67 @@
-<!-- =========================
- PART 1 / 3
- - 이 파일로 "전체를 통째로" 교체해서 붙여넣어.
- - 바로 실행은 아직(Part 2,3에서 업데이트/전투/엘리트/보상/탄환 완성)
- - 너가 “2번째 코드 줘”라고 신호 주면 PART 2 붙여줄게.
-========================= -->
 <!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Mini Survivor (Rebuild v2)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Mini Survivor (Mobile)</title>
 <style>
-  html,body{margin:0;height:100%;background:#0e0e0e;color:#eee;font-family:system-ui}
-  #wrap{display:flex;align-items:center;justify-content:center;height:100%}
-  canvas{background:#000;border:1px solid #333;border-radius:12px}
-
-  .hud{
-    position:fixed;top:12px;left:12px;
-    background:rgba(0,0,0,.6);border:1px solid #333;border-radius:12px;
-    padding:10px;font-size:14px;line-height:1.45;min-width:280px;
-    z-index:50;
-  }
-  .toast{
-    position:fixed;left:50%;transform:translateX(-50%);bottom:16px;
-    background:rgba(0,0,0,.78);border:1px solid #333;padding:10px 12px;
-    border-radius:12px;opacity:0;transition:opacity .15s;pointer-events:none;
-    white-space:nowrap;z-index:60;
-  }
-
-  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);z-index:100}
-  .panel{background:#111;border:1px solid #333;border-radius:14px;padding:16px;min-width:min(560px,92vw);max-width:min(760px,92vw);z-index:101}
+  html,body{margin:0;height:100%;background:#0e0e0e;color:#eee;font-family:system-ui;touch-action:none;overscroll-behavior:none}
+  #wrap{height:100%;display:flex;align-items:center;justify-content:center}
+  canvas{background:#000;border:1px solid #333;border-radius:12px;display:block;max-width:100vw;max-height:100vh}
+  .hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.55);border:1px solid #333;border-radius:12px;padding:10px;font-size:13px;line-height:1.45;min-width:240px}
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);z-index:50}
+  .panel{background:#111;border:1px solid #333;border-radius:14px;padding:16px;min-width:min(560px,92vw);max-width:min(760px,92vw)}
   .choices{display:grid;gap:10px}
-  button{background:#181818;color:#eee;border:1px solid #444;border-radius:10px;padding:10px;cursor:pointer;text-align:left}
+  button{background:#181818;color:#eee;border:1px solid #444;border-radius:10px;padding:12px;cursor:pointer;text-align:left}
   button:hover{border-color:#888}
-  .center{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:110}
+  .center{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:60}
   input{padding:10px 12px;border-radius:10px;border:1px solid #333;background:#000;color:#fff;width:min(320px,80vw)}
   .row{display:flex;gap:10px;margin-top:10px}
   .row button{flex:1;text-align:center}
   .small{opacity:.82;font-size:12px;margin-top:8px;line-height:1.35}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:rgba(0,0,0,.75);border:1px solid #333;padding:10px 12px;border-radius:12px;opacity:0;transition:opacity .15s;pointer-events:none;white-space:nowrap;z-index:70}
   .tag{display:inline-block;padding:2px 8px;border:1px solid #333;border-radius:999px;font-size:12px;opacity:.9;margin-right:6px}
 
-  /* 가시성: 아이템 글로우 */
-  .legend{opacity:.8;font-size:12px;margin-top:10px}
-
-  .iconbar{position:fixed;top:12px;right:12px;display:flex;flex-direction:column;gap:10px;z-index:10;max-width:320px}
-  .ibox{background:rgba(0,0,0,.55);border:1px solid #333;border-radius:12px;padding:8px}
-  .ibox h4{margin:0 0 6px;font-size:12px;opacity:.9}
-  .icons{display:flex;flex-wrap:wrap;gap:6px}
-  .ico{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid #333;border-radius:999px;font-size:12px;background:rgba(0,0,0,.25)}
-  .ico .dot{width:10px;height:10px;border-radius:50%}
-  .ico .n{opacity:.85}
-  .ico .lv{font-weight:700}
-  .ico.evo{border-color:#ffd400}
-  .sidebar{position:fixed;right:12px;bottom:12px;width:min(360px,92vw);max-height:min(52vh,520px);display:none;flex-direction:column;gap:8px;z-index:12}
-  .sidebar .panel{background:rgba(17,17,17,.92);border:1px solid #333;border-radius:14px;padding:12px}
-  .sidebar .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .sidebar .head h3{margin:0;font-size:14px}
-  .sidebar .head .kbd{font-size:12px;opacity:.8;border:1px solid #333;border-radius:8px;padding:2px 8px}
-  .sidebar .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:auto}
-  .sidebar table{width:100%;border-collapse:collapse;font-size:12px}
-  .sidebar th,.sidebar td{border-bottom:1px solid #262626;padding:6px 6px;text-align:left;vertical-align:top}
-  .sidebar tr:last-child td{border-bottom:none}
-  .badge{display:inline-block;border:1px solid #333;border-radius:999px;padding:1px 8px;font-size:11px;opacity:.9}
-
+  /* Mobile joystick */
+  .joyWrap{
+    position:fixed;left:14px;bottom:14px;width:140px;height:140px;border-radius:50%;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+    display:none;z-index:40;
+  }
+  .joyBase{
+    position:absolute;inset:18px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(0,0,0,.18);
+  }
+  .joyKnob{
+    position:absolute;left:50%;top:50%;width:52px;height:52px;margin-left:-26px;margin-top:-26px;border-radius:50%;
+    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);
+  }
+  .mobileHint{
+    position:fixed;right:12px;bottom:12px;background:rgba(0,0,0,.5);border:1px solid #333;border-radius:12px;padding:10px;font-size:12px;opacity:.9;z-index:40;
+    display:none;
+  }
 </style>
 </head>
 <body>
 
 <div class="hud" id="hud"></div>
 <div class="toast" id="toast"></div>
-#opt .panel{
-  width: 280px;
-  min-height: unset;
-  max-height: unset;
-  padding: 14px 16px;
-  border-radius: 14px;
-}
-
-#opt h3{
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
-#opt button{
-  font-size: 13px;
-  padding: 6px 10px;
-  border-radius: 8px;
-}
-
-#opt .row{
-  margin-top: 10px;
-  gap: 8px;
-}
-
-<div class="iconbar" id="iconbar">
-  <div class="ibox">
-    <h4>시너지</h4>
-    <div class="icons" id="synIcons"></div>
-  </div>
-  <div class="ibox">
-    <h4>장비</h4>
-    <div class="icons" id="gearIcons"></div>
-  </div>
-</div>
-
-<div class="sidebar" id="codex">
-  <div class="panel">
-    <div class="head">
-      <h3>시너지 도감 / 트리</h3>
-      <div class="kbd">Tab</div>
-    </div>
-    <div class="small" style="margin-top:4px;opacity:.9">
-      - 표는 <b>획득/미획득</b>을 표시하고, 조합 힌트를 보여줘.<br/>
-      - 게임 화면 안 가리도록 오른쪽 아래에만 뜸.
-    </div>
-  </div>
-  <div class="panel" style="overflow:auto">
-    <div id="codexBody"></div>
-  </div>
-</div>
 
 <div id="wrap">
-  <canvas id="c" width="900" height="540"></canvas>
+  <canvas id="c"></canvas>
 </div>
+
+<!-- Mobile joystick UI -->
+<div class="joyWrap" id="joyWrap">
+  <div class="joyBase"></div>
+  <div class="joyKnob" id="joyKnob"></div>
+</div>
+<div class="mobileHint" id="mobileHint">조이스틱으로 이동<br/>레벨업은 선택지 탭</div>
 
 <div id="levelup" class="overlay">
   <div class="panel">
-    <h3 style="margin:0 0 10px;">
-      레벨 업 <span class="tag">↑↓ / W,S</span><span class="tag">Space</span>
-    </h3>
+    <h3 style="margin:0 0 10px;">레벨 업 <span class="tag">↑↓ / W,S</span><span class="tag">Space</span><span class="tag">모바일: 탭</span></h3>
     <div id="choices" class="choices"></div>
     <div class="small" id="levelHint"></div>
   </div>
@@ -141,30 +74,10 @@
     <div class="row" style="margin-top:12px;">
       <button id="retryBtn">다시하기</button>
       <button id="copyBtn">런 결과 복사(리더보드용)</button>
-      <button id="submitBtn">온라인 등록</button>
     </div>
-    <div class="small">※ 온라인 저장은 payload를 서버에 저장하는 방식(A안)</div>
+    <div class="small">Firebase 붙일 때는 <b>submitRun(payload)</b>만 연결</div>
   </div>
 </div>
-
-
-<div id="leader" class="overlay">
-  <div class="panel">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-      <h3 style="margin:0;">리더보드</h3>
-      <div class="row" style="margin:0;gap:8px;">
-        <button id="lbRefresh">새로고침</button>
-        <button id="lbClose">닫기</button>
-      </div>
-    </div>
-    <div class="small" style="margin-top:8px;opacity:.85;">
-      점수 기준 TOP 20 · 익명 로그인(Anonymous Auth) 사용
-    </div>
-    <div id="lbStatus" class="small" style="margin-top:10px;opacity:.85;"></div>
-    <div id="lbList" style="margin-top:10px;display:grid;gap:8px;"></div>
-  </div>
-</div>
-
 
 <div id="start" class="center">
   <div class="panel">
@@ -174,64 +87,64 @@
       <button id="pickRanged">원거리</button>
       <button id="pickNinja">회전 칼날 닌자</button>
     </div>
-    <div class="legend">
-      <div>원거리: 기본 사격 + 시너지/원소 탄환(각각 따로 발사)</div>
-      <div>닌자: 회전 칼날(주기 타격) + <b>시너지 탄환도 정상 발사</b>(버그 수정)</div>
+    <div class="small">
+      원거리: 원소/시너지 + 탄막 성장<br/>
+      닌자: 근접 링 타격 + 빌드 누적형 장비(단, 동시타격 제한으로 밸런스)
     </div>
   </div>
 </div>
 
 <script>
+/* =========================
+   0) 캔버스 리사이즈(모바일 대응)
+========================= */
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
 
-// ===== Compatibility / Safety polyfills (added) =====
-if (typeof window.fireBulletTowards !== "function") {
-  window.fireBulletTowards = function fireBulletTowards(target, dmg, speed, tags=[], pierce=0, radius=4, life=2.0){
-    // will be rebound once fireBulletFrom exists
-    if (typeof window.fireBulletFrom === "function" && window.player) {
-      return window.fireBulletFrom(window.player.x, window.player.y, target, dmg, speed, tags, pierce, radius, life);
-    }
-  };
+function setupCanvas(){
+  const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+  // 16:9 고정 레터박스. 모바일에서 크게 보이게.
+  const maxW = window.innerWidth;
+  const maxH = window.innerHeight;
+  const targetAR = 16/9;
+  let cssW = maxW;
+  let cssH = cssW / targetAR;
+  if (cssH > maxH){
+    cssH = maxH;
+    cssW = cssH * targetAR;
+  }
+  canvas.style.width = cssW + "px";
+  canvas.style.height = cssH + "px";
+  canvas.width = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
 }
-if (typeof window.spawnEnemyNear !== "function") {
-  window.spawnEnemyNear = function spawnEnemyNear(x, y, opts = {}){
-    if (typeof window.spawnEnemyAt === "function" && typeof window.rand === "function") {
-      return window.spawnEnemyAt(x + window.rand(-16,16), y + window.rand(-16,16), opts);
-    }
-  };
-}
-// Prevent a single error from freezing the main loop
-window.__safeCall = (fn, ...args) => { try { return fn(...args); } catch(e){ console.error(e); return null; } };
-// ================================================
+addEventListener("resize", setupCanvas);
+setupCanvas();
 
 /* =========================
-   라벨 / 텍스트
+   1) 라벨 / 텍스트
 ========================= */
 const KR_EL = { water:"물", fire:"불", electric:"전기", wind:"바람", light:"빛", dark:"암흑" };
-const KR_UPG = {
-  atk:"공격력 증가", hp:"최대 HP 증가", as:"공격속도 증가", ms:"이동속도 증가",
-  mag:"자석 범위 증가", vamp:"흡혈(소량 회복)", crit:"치명(확률)"
-};
+const KR_UPG = { atk:"공격력 증가", hp:"최대 HP 증가", as:"공격속도 증가", ms:"이동속도 증가", mag:"자석 범위 증가" };
 
 const GEAR = {
-  saw:   { name:"톱날 드론", desc:"주변 도트 피해(누적)" },
+  saw:   { name:"톱날 드론", desc:"주변 회전 드론(누적 강화)" },
   shield:{ name:"보호막", desc:"피격 1회 무시(충전형)" },
-  blackhole:{ name:"블랙홀", desc:"주기 흡인 필드(누적)" },
-  bombs: { name:"연쇄 폭탄", desc:"일반몹 처치 폭발(엘리트는 즉사 금지)" },
-  clone: { name:"분신", desc:"보조 사격(누적)" },
-  thorns:{ name:"가시 오라", desc:"근접 도트(누적)" },
+  blackhole:{ name:"블랙홀", desc:"주기적 흡인 필드(누적 강화)" },
+  bombs: { name:"연쇄 폭탄", desc:"처치 폭발 확률(누적 강화)" },
+  clone: { name:"분신", desc:"보조 공격(누적 강화)" },
+  thorns:{ name:"가시 오라", desc:"근접 도트(누적 강화)" },
 };
 
 function labelChoice(key){
-  if (key.startsWith("el:")) return `원소: ${KR_EL[key.split(":")[1]] ?? key}`;
-  if (key.startsWith("gear:")){
-    const id = key.split(":")[1];
-    return `장비: ${GEAR[id]?.name ?? id}`;
-  }
+  if (key.startsWith("el:")) return `속성: ${KR_EL[key.split(":")[1]] ?? key}`;
+  if (key.startsWith("gear:")) return `장비: ${(GEAR[key.split(":")[1]]?.name) ?? key}`;
   return KR_UPG[key] ?? key;
 }
 
-function showToast(msg, seconds=1.1){
-  const toast = document.getElementById("toast");
+const toast = document.getElementById("toast");
+function showToast(msg, seconds=1.6){
   toast.textContent = msg;
   toast.style.opacity = "1";
   clearTimeout(showToast._t);
@@ -239,39 +152,19 @@ function showToast(msg, seconds=1.1){
 }
 
 /* =========================
-   캔버스 / 유틸
+   2) 유틸
 ========================= */
-const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
-
 const rand=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist2=(ax,ay,bx,by)=>{const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy;};
 const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx, ay-by);
 const norm=(dx,dy)=>{const d=Math.hypot(dx,dy)||1; return {x:dx/d,y:dy/d,d};};
 
-// ✅ nearest enemy helper (auto-aim / targeting)
-function nearestEnemy(fromX = player?.x ?? 0, fromY = player?.y ?? 0){
-  if (!enemies || enemies.length === 0) return null;
-  let best = null;
-  let bestD = Infinity;
-  for (const e of enemies){
-    if (!e || e.dead) continue;
-    const d = dist2(fromX, fromY, e.x, e.y);
-    if (d < bestD){ bestD = d; best = e; }
-  }
-  return best;
-}
-
-
-/* =========================
-   도형 렌더 헬퍼(세모/별)
-========================= */
 function drawTriangle(x,y,r){
   ctx.beginPath();
   ctx.moveTo(x, y - r);
-  ctx.lineTo(x - r*0.92, y + r*0.82);
-  ctx.lineTo(x + r*0.92, y + r*0.82);
+  ctx.lineTo(x - r*0.9, y + r*0.8);
+  ctx.lineTo(x + r*0.9, y + r*0.8);
   ctx.closePath();
 }
 function drawStar(x,y,r,inner=0.48, points=5){
@@ -289,15 +182,81 @@ function drawStar(x,y,r,inner=0.48, points=5){
 }
 
 /* =========================
-   입력
+   3) 입력: PC 키 + 모바일 조이스틱
 ========================= */
 const keys = new Set();
 addEventListener("keydown", e => keys.add(e.key.toLowerCase()));
 addEventListener("keyup", e => keys.delete(e.key.toLowerCase()));
 
+const joyWrap = document.getElementById("joyWrap");
+const joyKnob = document.getElementById("joyKnob");
+const mobileHint = document.getElementById("mobileHint");
+
+let isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints>0);
+if (isTouchDevice){
+  joyWrap.style.display = "block";
+  mobileHint.style.display = "block";
+}
+
+const joy = {
+  active:false,
+  id:null,
+  cx:0, cy:0,
+  dx:0, dy:0, // -1..1
+  max:44, // knob radius range
+};
+
+function setKnob(dx,dy){
+  const mx = dx*joy.max;
+  const my = dy*joy.max;
+  joyKnob.style.transform = `translate(${mx}px, ${my}px)`;
+}
+
+function handleJoyMove(clientX, clientY){
+  const rect = joyWrap.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  let dx = (clientX - cx);
+  let dy = (clientY - cy);
+  const d = Math.hypot(dx,dy) || 1;
+  const max = joy.max;
+  const k = Math.min(1, d/max);
+  dx = (dx/d)*k;
+  dy = (dy/d)*k;
+  joy.dx = dx; joy.dy = dy;
+  setKnob(dx,dy);
+}
+
+function joyReset(){
+  joy.active=false; joy.id=null; joy.dx=0; joy.dy=0;
+  setKnob(0,0);
+}
+
+joyWrap.addEventListener("pointerdown", (e)=>{
+  if (e.pointerType==="mouse") return; // 마우스는 키보드로
+  joy.active=true; joy.id=e.pointerId;
+  joyWrap.setPointerCapture(e.pointerId);
+  handleJoyMove(e.clientX, e.clientY);
+});
+joyWrap.addEventListener("pointermove", (e)=>{
+  if (!joy.active || e.pointerId!==joy.id) return;
+  handleJoyMove(e.clientX, e.clientY);
+});
+joyWrap.addEventListener("pointerup", (e)=>{
+  if (e.pointerId!==joy.id) return;
+  joyReset();
+});
+joyWrap.addEventListener("pointercancel", (e)=>{
+  if (e.pointerId!==joy.id) return;
+  joyReset();
+});
+
 /* =========================
-   상태/엔티티
+   4) 상태 / 엔티티
 ========================= */
+const W = () => parseFloat(canvas.style.width) || (canvas.width/(window.devicePixelRatio||1));
+const H = () => parseFloat(canvas.style.height) || (canvas.height/(window.devicePixelRatio||1));
+
 const state = {
   running:false,
   paused:false,
@@ -305,184 +264,220 @@ const state = {
   nickname:"Player",
   character:"ranged", // ranged | ninja
 
-  time:300,           // 5분
+  time:300,
   elapsed:0,
-  stage:1,            // 1~5
+  stage:1,
   stageMod:null,
 
   kills:0,
-  eliteKills:0,
-  score:0,            // (Part2에서 산정)
 
   level:1,
   xp:0,
   xpNeed:10,
 
-  // 스탯
   atk:12,
   maxHp:100,
   hp:100,
   as:3.0,
-  ms:220,
-  crit:0.05,
-  vamp:0.00,
+  ms:230,
 
-  // 수집(초반 답답함 해결: Part2에서 early boost 적용)
-  pickupRadius: 190,
-  pickupForce: 1500,
+  pickupRadius: 170,
+  pickupForce: 1200,
 
-  // 피격
   hurtFlash: 0,
-  iframes: 0.50,
+  iframes: 0.5,
   ifrT: 0,
-
   freezeT: 0,
 
-  // 원소/시너지
-  pendingEl: null,          // 대기 원소(1개)
-  synergyStacks: new Map(), // "완성된 시너지"만 저장
-  gearLv: new Map(),
+  pendingEl: null,
+  synergyStacks: new Map(), // k -> lv
+  gearLv: new Map(),        // id -> lv
 
-  elementChanceBase: 0.62,
-  elementChanceIfPending: 0.90,
+  elementChanceBase: 0.56,
+  elementChanceIfPending: 0.86,
 
   lvCursor: 0,
 
-  // 닌자 밸런스
+  // ninja tuning
   ninjaBladeAngle: 0,
-  ninjaHitGlobalCd: 0,
-  ninjaMaxTargets: 3,
-  ninjaRangeBase: 48,
-  ninjaRingWidth: 12,
-  ninjaDmgScale: 0.52,
-  ninjaRangeScale: 0.55,
-
-  // 장비 런타임
   shieldCharges: 0,
   shieldRegenT: 0,
   _bhCd: 0,
-
-  // 이벤트/웨이브 플래그(Part2에서 사용)
-  _waveToastShown:false,
-  _waveEliteSpawned:false,
+  _healCd: 0,
 };
 
-const player = { x:450, y:270, r:12 };
+const player = { x:0, y:0, r:12 };
 
 const enemies = [];
 const bullets = [];
 const xpOrbs = [];
-const items  = [];
+const items = [];
 const fields = [];
-const summons= [];
+const summons = [];
 
 /* =========================
-   필드 스타일(가시성 위주)
+   5) 스테이지/엘리트
 ========================= */
-const FIELD_STYLE = {
-  smoke:    {type:"stroke", color:"#ffffff", alpha:0.28, line:2, dash:[7,7]},
-  frost:    {type:"double", color:"#55ccff", alpha:0.24, line:2},
-  oil:      {type:"stroke", color:"#aaaaaa", alpha:0.16, line:2, dash:[3,7]},
+const ELITE_POOL = [
+  { id:"charger",  name:"돌진자",  misc:()=>({dashCd:2.2,dashT:0,dashing:false}) },
+  { id:"splitter", name:"분열자",  misc:()=>({}) },
+  { id:"summoner", name:"소환사",  misc:()=>({summonCd:3.2}) },
+  { id:"bomber",   name:"폭발자",  misc:()=>({fuse:0}) },
+  { id:"waver",    name:"파동자",  misc:()=>({waveCd:2.6}) },
 
-  storm:    {type:"double", color:"#ffd400", alpha:0.18, line:2},
-  spark:    {type:"dots",   color:"#ffd400", alpha:0.22, line:0},
-  lightning:{type:"bolt",   color:"#ffd400", alpha:0.95, line:3},
+  { id:"sniper",   name:"저격수",  misc:()=>({shotCd:1.8}) },
+  { id:"shielder", name:"실더",    misc:()=>({shield:120}) },
+  { id:"teleport", name:"텔레포터", misc:()=>({tpCd:3.0}) },
+  { id:"vortex",   name:"소용돌이술사", misc:()=>({fieldCd:3.0}) },
+  { id:"leaker",   name:"장판술사", misc:()=>({puddleCd:2.4}) },
+];
 
-  blast:    {type:"fill",   color:"#ff8844", alpha:0.22, line:0},
-  flare:    {type:"fill",   color:"#ff8844", alpha:0.18, line:0},
-  firevortex:{type:"stroke",color:"#ff8844", alpha:0.22, line:3},
-  ringfire: {type:"stroke", color:"#ff8844", alpha:0.22, line:2, dash:[10,8]},
+let stageEliteSet = [];
 
-  tornado:  {type:"double", color:"#88ffff", alpha:0.18, line:2},
-  eclipse:  {type:"stroke", color:"#cc66ff", alpha:0.24, line:3},
-
-  acid:     {type:"stroke", color:"#66ff66", alpha:0.22, line:2, dash:[5,6]},
-  wave:     {type:"stroke", color:"#66ccff", alpha:0.14, line:3, dash:[14,10]},
-  gust:     {type:"stroke", color:"#88ffff", alpha:0.18, line:2},
-  darkbolt: {type:"bolt",   color:"#cc66ff", alpha:0.90, line:3},
-};
-
-function getFieldStyle(kind){
-  return FIELD_STYLE[kind] ?? {type:"stroke", color:"#ffffff", alpha:0.16, line:2};
-}
-
-/* =========================
-   필드 “덕지덕지 방지”: 같은 kind 가까우면 합치기
-========================= */
-function spawnField(kind, x, y, r, life, power, meta={}){
-  for (const f of fields){
-    if (f.kind !== kind) continue;
-    if (dist2(f.x,f.y,x,y) < 70*70){
-      f.r = Math.min(f.r + r*0.22, r*1.55);
-      f.life = Math.max(f.life, life);
-      f.power = Math.max(f.power, power);
-      return;
-    }
+function pickStageElites(){
+  const copy = ELITE_POOL.slice();
+  for(let i=copy.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]]=[copy[j],copy[i]];
   }
-  fields.push({kind,x,y,r,life,power,meta});
+  stageEliteSet = copy.slice(0,4);
 }
 
-function spawnSummon(kind, x, y, life, power, meta={}){
-  summons.push({kind,x,y,life,cd:0,power,meta});
+function rollStageModifier(){
+  const mods = [
+    { id:"xp",   name:"경험치 풍년" },
+    { id:"slow", name:"한랭 기류" },
+    { id:"rage", name:"광폭화" },
+    { id:"heal", name:"치유의 기운" },
+    { id:"gear", name:"장비 상점" },
+  ];
+  const m = mods[Math.floor(Math.random()*mods.length)];
+  state.stageMod = m.id;
+  showToast(`스테이지 효과: ${m.name}`, 1.6);
 }
 
-function spawnXp(x,y){ xpOrbs.push({x,y,r:5,vx:0,vy:0}); }
-function spawnItem(x,y,type){ items.push({x,y,r:11,vx:0,vy:0,type, t:0}); } // t: 반짝임
+function spawnStageElite(){
+  const pick = stageEliteSet[Math.floor(Math.random()*stageEliteSet.length)];
+  const side = Math.floor(rand(0,4));
+  const w=W(), h=H();
+  let x,y;
+  if(side===0){x=-30; y=rand(40,h-40);}
+  if(side===1){x=w+30; y=rand(40,h-40);}
+  if(side===2){x=rand(40,w-40); y=-30;}
+  if(side===3){x=rand(40,w-40); y=h+30;}
+
+  spawnEnemyNear(x,y,{ elite:true, type:pick.id, misc:pick.misc() });
+  showToast(`정예 등장: ${pick.name}`, 1.4);
+}
 
 /* =========================
-   원소/시너지: "완성된 것만" 스택에 들어가야 함
+   6) 시너지/장비
 ========================= */
 function keyPair(a,b){ return [a,b].sort().join("_"); }
 function synergyName(k){
   const [a,b]=k.split("_");
-  if (a===b) return `${KR_EL[a]}+${KR_EL[b]}(진화)`;
-  return `${KR_EL[a]}+${KR_EL[b]}`;
+  if (a===b) return `${KR_EL[a]} + ${KR_EL[b]} (진화)`;
+  return `${KR_EL[a]} + ${KR_EL[b]}`;
 }
 function addSynergy(a,b){
   const k = keyPair(a,b);
   state.synergyStacks.set(k, (state.synergyStacks.get(k) ?? 0) + 1);
-  showToast(`시너지 완성: ${synergyName(k)} Lv.${state.synergyStacks.get(k)}`, 1.15);
+  showToast(`시너지 획득: ${synergyName(k)} (Lv.${state.synergyStacks.get(k)})`, 1.5);
 }
 function pickElement(el){
   if (!state.pendingEl){
     state.pendingEl = el;
-    showToast(`대기 원소: ${KR_EL[el]}`, 0.9);
+    showToast(`대기 원소: ${KR_EL[el]}`, 1.0);
     return;
   }
   const a = state.pendingEl;
+  const b = el;
   state.pendingEl = null;
-  addSynergy(a, el);
+  addSynergy(a,b);
 }
-
 function gearLevel(id){ return state.gearLv.get(id) ?? 0; }
 function addGear(id){
   state.gearLv.set(id, gearLevel(id)+1);
-  showToast(`장비 획득: ${GEAR[id].name} Lv.${gearLevel(id)}`, 1.1);
+  showToast(`장비 강화: ${GEAR[id].name} (Lv.${gearLevel(id)})`, 1.5);
   if (id==="shield"){
     state.shieldCharges = Math.min(3, state.shieldCharges + 1);
   }
 }
 
 /* =========================
-   레벨업 UI (↑↓ + W/S + Space)
+   7) 레벨업 UI
 ========================= */
 const levelupEl = document.getElementById("levelup");
 const choicesEl = document.getElementById("choices");
 const levelHint = document.getElementById("levelHint");
 
 function summarizeSynergies(){
-  const arr = [];
-  for (const [k,lv] of state.synergyStacks.entries()){
-    if (lv>0) arr.push(`${synergyName(k)}x${lv}`);
-  }
-  return arr.length ? arr.slice(0,4).join(" / ") + (arr.length>4 ? " / …":"") : "-";
+  const arr=[];
+  for (const [k,lv] of state.synergyStacks.entries()) if(lv>0) arr.push(`${synergyName(k)}x${lv}`);
+  return arr.length ? arr.slice(0,3).join(" / ") + (arr.length>3?" / …":"") : "-";
 }
 function summarizeGears(){
-  const arr = [];
-  for (const [k,lv] of state.gearLv.entries()){
-    if (lv>0) arr.push(`${GEAR[k].name}x${lv}`);
+  const arr=[];
+  for (const [k,lv] of state.gearLv.entries()) if(lv>0) arr.push(`${GEAR[k].name}x${lv}`);
+  return arr.length ? arr.slice(0,3).join(" / ") + (arr.length>3?" / …":"") : "-";
+}
+
+function openLevelUp(){
+  state.paused = true;
+  levelupEl.style.display = "flex";
+  choicesEl.innerHTML = "";
+
+  const pool = ["atk","hp","as","ms","mag"];
+
+  // 장비 등장 확률: 중반 이후 증가, gear 모드면 크게 증가
+  const t = state.elapsed/300;
+  const gearChance = (state.stageMod==="gear") ? 0.78 : (t<0.35 ? 0.32 : 0.55);
+  if (Math.random() < gearChance){
+    const gearIds = Object.keys(GEAR);
+    pool.push("gear:"+gearIds[Math.floor(Math.random()*gearIds.length)]);
+    if (Math.random() < 0.32){
+      pool.push("gear:"+gearIds[Math.floor(Math.random()*gearIds.length)]);
+    }
   }
-  return arr.length ? arr.slice(0,4).join(" / ") + (arr.length>4 ? " / …":"") : "-";
+
+  // 원소: 더 잘 뜨게(요청)
+  const elChance = state.pendingEl ? state.elementChanceIfPending : state.elementChanceBase;
+  if (Math.random() < elChance){
+    const els = ["water","fire","electric","wind","light","dark"];
+    let chosen;
+    if (state.pendingEl && Math.random() < 0.30){
+      chosen = state.pendingEl; // 모노 시너지 가능
+    } else if (state.pendingEl && Math.random() < 0.55){
+      const others = els.filter(e=>e!==state.pendingEl);
+      chosen = others[Math.floor(Math.random()*others.length)];
+    } else {
+      chosen = els[Math.floor(Math.random()*els.length)];
+    }
+    pool.push("el:"+chosen);
+  }
+
+  // 3개 뽑기(원소는 최대 1개)
+  const tmp = pool.slice();
+  const picks=[];
+  while (picks.length<3 && tmp.length){
+    const idx = Math.floor(Math.random()*tmp.length);
+    const v = tmp.splice(idx,1)[0];
+    if (v.startsWith("el:") && picks.some(x=>x.startsWith("el:"))) continue;
+    picks.push(v);
+  }
+
+  for (const p of picks){
+    const btn = document.createElement("button");
+    btn.textContent = labelChoice(p);
+    btn.onclick = () => pickUpgrade(p);
+    choicesEl.appendChild(btn);
+  }
+
+  state.lvCursor = 0;
+  highlightChoice();
+
+  const pending = state.pendingEl ? `대기 원소: ${KR_EL[state.pendingEl]}` : `대기 원소: -`;
+  levelHint.textContent = `${pending} · 시너지: ${summarizeSynergies()} · 장비: ${summarizeGears()}`;
 }
 
 function highlightChoice(){
@@ -512,68 +507,12 @@ addEventListener("keydown", (e)=>{
   }
 });
 
-function openLevelUp(){
-  state.paused = true;
-  levelupEl.style.display = "flex";
-  choicesEl.innerHTML = "";
-
-  // 기본 업그레이드 풀
-  const pool = ["atk","hp","as","ms","mag","crit","vamp"];
-
-  // 장비 등장
-  const t = state.elapsed/300;
-  const gearChance = (t<0.25) ? 0.55 : 0.72;
-  if (Math.random() < gearChance){
-    const ids = Object.keys(GEAR);
-    pool.push("gear:"+ids[Math.floor(Math.random()*ids.length)]);
-    if (Math.random() < 0.35) pool.push("gear:"+ids[Math.floor(Math.random()*ids.length)]);
-  }
-
-  // 원소 등장 (대기 원소 있으면 확률 더 높음)
-  const elChance = state.pendingEl ? state.elementChanceIfPending : state.elementChanceBase;
-  if (Math.random() < elChance){
-    const els = ["water","fire","electric","wind","light","dark"];
-    let chosen;
-    if (state.pendingEl && Math.random() < 0.35) chosen = state.pendingEl;
-    else if (state.pendingEl && Math.random() < 0.55){
-      const others = els.filter(e=>e!==state.pendingEl);
-      chosen = others[Math.floor(Math.random()*others.length)];
-    } else chosen = els[Math.floor(Math.random()*els.length)];
-    pool.push("el:"+chosen);
-  }
-
-  // 3개 뽑기 (원소는 최대 1개)
-  const tmp = pool.slice();
-  const picks = [];
-  while (picks.length < 3 && tmp.length){
-    const idx = Math.floor(Math.random()*tmp.length);
-    const v = tmp.splice(idx,1)[0];
-    if (v.startsWith("el:") && picks.some(x=>x.startsWith("el:"))) continue;
-    picks.push(v);
-  }
-
-  for (const p of picks){
-    const btn = document.createElement("button");
-    btn.textContent = labelChoice(p);
-    btn.onclick = () => pickUpgrade(p);
-    choicesEl.appendChild(btn);
-  }
-
-  state.lvCursor = 0;
-  highlightChoice();
-
-  const pending = state.pendingEl ? `대기 원소: ${KR_EL[state.pendingEl]}` : `대기 원소: -`;
-  levelHint.textContent = `${pending} · 시너지 ${summarizeSynergies()} · 장비 ${summarizeGears()}`;
-}
-
 function pickUpgrade(p){
   if (p==="atk") state.atk += 2;
   if (p==="hp"){ state.maxHp += 18; state.hp = Math.min(state.maxHp, state.hp + 18); }
   if (p==="as") state.as += 0.28;
   if (p==="ms") state.ms += 18;
-  if (p==="mag") state.pickupRadius = Math.min(420, state.pickupRadius + 38);
-  if (p==="crit") state.crit = Math.min(0.40, state.crit + 0.02);
-  if (p==="vamp") state.vamp = Math.min(0.10, state.vamp + 0.01);
+  if (p==="mag") state.pickupRadius = Math.min(360, state.pickupRadius + 28);
 
   if (p.startsWith("el:")) pickElement(p.split(":")[1]);
   if (p.startsWith("gear:")) addGear(p.split(":")[1]);
@@ -583,506 +522,152 @@ function pickUpgrade(p){
 }
 
 /* =========================
-   HUD / 종료 / payload
+   8) XP / 레벨
 ========================= */
-const hud = document.getElementById("hud");
-function updateHud(){
-  const mm = String(Math.floor(state.time/60)).padStart(1,"0");
-  const ss = String(Math.floor(state.time%60)).padStart(2,"0");
-  const pending = state.pendingEl ? KR_EL[state.pendingEl] : "-";
-
-  hud.innerHTML =
-    `⏱️ ${mm}:${ss} · 스테이지 ${state.stage}` +
-    `<br/>레벨 ${state.level} · XP ${state.xp}/${state.xpNeed}` +
-    `<br/>HP ${Math.max(0,Math.floor(state.hp))}/${state.maxHp}` +
-    `<br/>킬 ${state.kills} (엘리트 ${state.eliteKills}) · 점수 ${Math.floor(state.score)}` +
-    `<br/>대기 원소: ${pending}` +
-    `<br/>보호막: ${state.shieldCharges}` +
-    `<br/>장비: ${summarizeGears()}` +
-    `<br/><span style="opacity:.75">시너지: ${summarizeSynergies()}</span>`;
-}
-
-const go = document.getElementById("gameover");
-const goTitle = document.getElementById("goTitle");
-const goBody = document.getElementById("goBody");
-document.getElementById("retryBtn").onclick = () => resetAndStart();
-document.getElementById("copyBtn").onclick = () => {
-  const payload = buildRunPayload();
-  navigator.clipboard.writeText(JSON.stringify(payload,null,2));
-  showToast("복사됨!", 0.9);
-};
-
-// ✅ 온라인 등록 / 리더보드 UI
-const leaderEl = document.getElementById("leader");
-const lbList = document.getElementById("lbList");
-const lbStatus = document.getElementById("lbStatus");
-
-function openLeaderboard(){
-  leaderEl.style.display="flex";
-  refreshLeaderboard();
-}
-function closeLeaderboard(){
-  leaderEl.style.display="none";
-}
-document.getElementById("lbClose").onclick = closeLeaderboard;
-document.getElementById("lbRefresh").onclick = refreshLeaderboard;
-
-// Tab 키로 도감이 이미 있다면 충돌날 수 있으니, 게임오버 화면에서만 리더보드 열기(버튼으로)
-document.getElementById("submitBtn").onclick = async () => {
-  const payload = buildRunPayload();
-  try{
-    lbStatus.textContent = "업로드 중...";
-    await (window.submitRun ? window.submitRun(payload) : Promise.reject(new Error("submitRun 미구현")));
-    showToast("온라인 등록 완료!", 1.0);
-    openLeaderboard();
-  }catch(err){
-    console.error(err);
-    showToast("온라인 등록 실패(콘솔 확인)", 1.2);
-    lbStatus.textContent = "업로드 실패: " + (err?.message ?? err);
-  }
-};
-
-async function refreshLeaderboard(){
-  if (!window.fetchLeaderboard){
-    lbStatus.textContent = "Firebase 연결 전입니다. 아래 안내대로 연결하세요.";
-    return;
-  }
-  lbStatus.textContent = "불러오는 중...";
-  lbList.innerHTML = "";
-  try{
-    const rows = await window.fetchLeaderboard();
-    lbStatus.textContent = rows.length ? "" : "기록이 아직 없습니다.";
-    rows.forEach((r, i) => {
-      const div = document.createElement("div");
-      div.style.display = "flex";
-      div.style.alignItems = "center";
-      div.style.justifyContent = "space-between";
-      div.style.gap = "10px";
-      div.style.padding = "10px 12px";
-      div.style.border = "1px solid #333";
-      div.style.borderRadius = "12px";
-      div.style.background = "rgba(0,0,0,.35)";
-
-      const left = document.createElement("div");
-      left.innerHTML = `<b>#${i+1} ${escapeHtml(r.nickname ?? "Player")}</b>
-        <div class="small" style="margin-top:3px;opacity:.8;">
-          ${escapeHtml(r.characterLabel ?? "-")} · Lv.${r.level ?? "-"} · 킬 ${r.kills ?? 0} (엘리트 ${r.eliteKills ?? 0})
-        </div>`;
-
-      const right = document.createElement("div");
-      right.style.textAlign = "right";
-      right.innerHTML = `<b>${Math.floor(r.score ?? 0)}</b>
-        <div class="small" style="margin-top:3px;opacity:.8;">${formatMs(r.timePlayed ?? 0)}</div>`;
-
-      div.appendChild(left);
-      div.appendChild(right);
-      lbList.appendChild(div);
-    });
-  }catch(err){
-    console.error(err);
-    lbStatus.textContent = "불러오기 실패: " + (err?.message ?? err);
+function gainXp(v){
+  if (state.stageMod === "xp") v = Math.floor(v*1.25);
+  state.xp += v;
+  if (state.xp >= state.xpNeed){
+    state.xp -= state.xpNeed;
+    state.xpNeed = Math.floor(state.xpNeed * 1.35);
+    state.level++;
+    openLevelUp();
   }
 }
 
-// 간단 sanitize
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
-}
-function formatMs(ms){
-  const sec = Math.floor((ms||0)/1000);
-  const m = Math.floor(sec/60);
-  const s = String(sec%60).padStart(2,"0");
-  return `${m}:${s}`;
-}
-
-
-
-function buildRunPayload(){
-  return {
-    nickname: state.nickname,
-    character: state.character,
-    score: Math.floor(state.score),
-    kills: state.kills,
-    eliteKills: state.eliteKills,
-    level: state.level,
-    cleared: state.time<=0,
-    timePlayedMs: Math.round(state.elapsed*1000),
-    synergies: [...state.synergyStacks.entries()],
-    gears: [...state.gearLv.entries()],
-    createdAt: Date.now(),
-  };
-}
-
 /* =========================
-   스타트 UI
+   9) 스폰 / 드랍
 ========================= */
-const start = document.getElementById("start");
-document.getElementById("pickRanged").onclick = () => {
-  state.character="ranged";
-  startGameFromUI();
-};
-document.getElementById("pickNinja").onclick = () => {
-  state.character="ninja";
-  startGameFromUI();
-};
+function spawnXp(x,y){ xpOrbs.push({x,y,r:5,vx:0,vy:0}); }
+function spawnItem(x,y,type){ items.push({x,y,r:9,vx:0,vy:0,type}); }
 
-function startGameFromUI(){
-  const name = document.getElementById("nameInput").value.trim();
-  state.nickname = name ? name : "Player";
-  start.style.display="none";
-  resetAndStart();
-}
-
-/* =========================
-   리셋/시작/종료 (전투/업데이트는 Part2에서 완성)
-========================= */
-function resetState(){
-  enemies.length=0; bullets.length=0; xpOrbs.length=0; items.length=0; fields.length=0; summons.length=0;
-
-  state.running=false; state.paused=false;
-  state.time=300; state.elapsed=0; state.stage=1; state.stageMod=null;
-
-  state.kills=0; state.eliteKills=0; state.score=0;
-
-  state.level=1; state.xp=0; state.xpNeed=10;
-
-  state.atk=12;
-  state.maxHp = (state.character==="ninja") ? 95 : 110;
-  state.hp=state.maxHp;
-
-  state.as = (state.character==="ninja") ? 2.7 : 3.0;
-  state.ms = (state.character==="ninja") ? 255 : 220;
-
-  state.crit=0.05;
-  state.vamp=0.00;
-
-  state.pickupRadius=5;
-  state.pickupForce=2500;
-
-  state.hurtFlash=0;
-  state.ifrT=0;
-  state.freezeT=0;
-
-  state.pendingEl=null;
-  state.synergyStacks = new Map();
-  state.gearLv = new Map();
-
-  state.lvCursor=0;
-
-  state.ninjaBladeAngle=0;
-  state.ninjaHitGlobalCd=0;
-
-  state.shieldCharges=0;
-  state.shieldRegenT=0;
-  state._bhCd=0;
-
-  state._waveToastShown=false;
-  state._waveEliteSpawned=false;
-
-  player.x = canvas.width/2;
-  player.y = canvas.height/2;
-}
-
-function resetAndStart(){
-  go.style.display="none";
-  levelupEl.style.display="none";
-  resetState();
-  state.running=true;
-
-  // Part2에서 실제 게임 시작 토스트/스테이지/엘리트세트 초기화 붙음
-  showToast("시작!", 0.8);
-}
-
-function endGame(cleared){
-  state.running = false;
-  go.style.display="flex";
-  goTitle.textContent = cleared ? "클리어!" : "게임 오버";
-  goBody.textContent =
-    `닉네임: ${state.nickname}\n`+
-    `캐릭터: ${state.character==="ranged"?"원거리":"닌자"}\n`+
-    `점수: ${Math.floor(state.score)}\n`+
-    `킬: ${state.kills} (엘리트 ${state.eliteKills})\n`+
-    `레벨: ${state.level}\n`+
-    `시너지: ${summarizeSynergies()}\n`+
-    `장비: ${summarizeGears()}\n\n`+
-    `payload는 "런 결과 복사"로 복사해서 서버에 저장하면 됨.`;
-}
-
-
-
-/* =========================
-   유틸 추가
-========================= */
-function chance(p){ return Math.random() < p; }
-function lerp(a,b,t){ return a + (b-a)*t; }
-
-/* =========================
-   엔티티 생성/드랍
-========================= */
-function spawnEnemyAt(x,y, opts={}){
-  const elite = !!opts.elite;
-  const kind = opts.kind ?? "normal";
-  const minute = state.elapsed/60;
-  const t = state.elapsed/300;
-
-  // ✅ 초반부터 긴장감, 후반 더 확실히
-  const baseHp  = 16 + state.level*2.2 + t*14;
-  const baseSpd = 98 + state.level*5.2 + t*52;
-
-  // 행동 다양화
+function tryDropSupportItem(x,y){
+  const t = state.elapsed / 300;
+  const base = 0.008 + t*0.012; // 약간 줄인 드랍(요청)
+  if (Math.random() > base) return;
   const r = Math.random();
-  let behavior;
+  if (r < 0.58) spawnItem(x,y,"heal");
+  else if (r < 0.84) spawnItem(x,y,"freeze");
+  else spawnItem(x,y,"nuke");
+}
+
+function spawnEnemyNear(x,y, opts={}){
+  const kind = opts.kind ?? "normal";
+  const elite = !!opts.elite;
+
+  const t = state.elapsed/300;
+  const r = Math.random();
+  let behavior="normal";
   if (t < 0.55){
-    behavior = (r<0.58)?"normal":(r<0.82)?"strafe":"swarm";
+    behavior = (r<0.72)?"normal":(r<0.90)?"strafe":"swarm";
   } else {
-    behavior = (r<0.34)?"normal":(r<0.62)?"strafe":(r<0.86)?"swarm":"orbit";
+    behavior = (r<0.42)?"normal":(r<0.70)?"strafe":(r<0.88)?"swarm":"orbit";
   }
+
+  const baseHp = 12 + state.level*1.5;
+  const baseSpd = 70 + state.level*4;
 
   const e = {
-    x:x+rand(-14,14), y:y+rand(-14,14),
+    x:x+rand(-16,16), y:y+rand(-16,16),
     r: elite ? 18 : (kind==="mini"?9:12),
-    hp: elite ? (260 + state.level*22 + minute*24) : (kind==="mini" ? (8 + state.level*1.1) : baseHp),
-    maxHp: 1,
-    spd: elite ? (108 + state.level*4.0 + minute*6) : (kind==="mini" ? (118 + state.level*4.6) : baseSpd),
-
+    hp: elite ? (210 + state.level*16) : (kind==="mini" ? (6 + state.level*0.8) : baseHp),
+    spd: elite ? (88 + state.level*3) : (kind==="mini"? (95 + state.level*4) : baseSpd),
     elite,
     type: opts.type ?? "normal",
-    name: opts.name ?? null,
     behavior,
 
-    hitFlash:0,
     burnT:0, burnDps:0,
     slowT:0,
     fearT:0,
 
     phase: rand(0,Math.PI*2),
-    preferR: 150 + rand(-30, 90),
+    preferR: 140 + rand(-30, 70),
     jukeT: rand(0.6, 1.6),
     jukeDir: Math.random()<0.5?-1:1,
 
     misc: Object.assign({}, opts.misc ?? {}),
   };
-  e.maxHp = e.hp;
+
   enemies.push(e);
 }
 
 function spawnEnemy(){
+  const w=W(), h=H();
   const side = Math.floor(rand(0,4));
   let x,y;
-  if(side===0){x=-22; y=rand(0,540);}
-  if(side===1){x=922; y=rand(0,540);}
-  if(side===2){x=rand(0,900); y=-22;}
-  if(side===3){x=rand(0,900); y=562;}
-  spawnEnemyAt(x,y);
-}
-
-function spawnXp(x,y){
-  xpOrbs.push({x,y,r:5,vx:0,vy:0});
-}
-function spawnItem(x,y,type){
-  items.push({x,y,r:11,vx:0,vy:0,type, t:0});
+  if(side===0){x=-20; y=rand(0,h);}
+  if(side===1){x=w+20; y=rand(0,h);}
+  if(side===2){x=rand(0,w); y=-20;}
+  if(side===3){x=rand(0,w); y=h+20;}
+  spawnEnemyNear(x,y);
 }
 
 /* =========================
-   엘리트 풀/스폰/문구/보상
+   10) 플레이어 피해 처리
 ========================= */
-const ELITE_POOL = [
-  { id:"charger",  name:"돌진자",  misc:()=>({dashCd:2.0,dashT:0}) },
-  { id:"splitter", name:"분열자",  misc:()=>({}) },
-  { id:"summoner", name:"소환사",  misc:()=>({summonCd:2.8}) },
-  { id:"bomber",   name:"폭발자",  misc:()=>({fuse:0}) },
-  { id:"waver",    name:"파동자",  misc:()=>({waveCd:2.2}) },
-  { id:"sniper",   name:"저격수",  misc:()=>({shotCd:1.6}) },
-  { id:"shielder", name:"실더",    misc:()=>({shield:140}) },
-  { id:"teleport", name:"텔레포터", misc:()=>({tpCd:2.6}) },
-  { id:"vortex",   name:"소용돌이술사", misc:()=>({fieldCd:2.6}) },
-  { id:"leaker",   name:"장판술사", misc:()=>({puddleCd:2.0}) },
-];
-
-let stageEliteSet = [];
-function pickStageElites(){
-  const copy = ELITE_POOL.slice();
-  for(let i=copy.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [copy[i],copy[j]]=[copy[j],copy[i]];
-  }
-  stageEliteSet = copy.slice(0,4);
-}
-
-function spawnStageElite(){
-  const pick = stageEliteSet[Math.floor(Math.random()*stageEliteSet.length)];
-  const side = Math.floor(rand(0,4));
-  let x,y;
-  if(side===0){x=-30; y=rand(40,500);}
-  if(side===1){x=930; y=rand(40,500);}
-  if(side===2){x=rand(40,860); y=-30;}
-  if(side===3){x=rand(40,860); y=570;}
-
-  showToast(`정예 등장: ${pick.name}`, 1.1); // ✅ 요구사항 4
-  spawnEnemyAt(x,y,{ elite:true, type:pick.id, name:pick.name, misc:pick.misc() });
-}
-
-// ✅ 엘리트 보상(요구사항 2)
-function rewardEliteDeath(x,y){
-  // XP 대량
-  for(let i=0;i<10;i++) spawnXp(x+rand(-18,18), y+rand(-18,18));
-  // 아이템 보상 1개 보장(확률로 2개)
-  const r = Math.random();
-  if (r < 0.50) spawnItem(x,y,"heal");
-  else if (r < 0.82) spawnItem(x,y,"freeze");
-  else spawnItem(x,y,"nuke");
-  if (Math.random() < 0.18) spawnItem(x+rand(-12,12), y+rand(-12,12), "heal");
-
-  // 점수 스파이크
-  state.score += 250;
-  showToast("정예 보상!", 0.9);
-}
-
-/* =========================
-   스테이지 모드/웨이브 이벤트(쉬움 해결)
-========================= */
-function rollStageModifier(){
-  const mods = [
-    { id:"xp",   name:"경험치 풍년" },
-    { id:"slow", name:"한랭 기류" },
-    { id:"rage", name:"광폭화" },
-    { id:"heal", name:"치유의 기운" },
-    { id:"gear", name:"장비 집중" },
-  ];
-  const m = mods[Math.floor(Math.random()*mods.length)];
-  state.stageMod = m.id;
-  showToast(`스테이지: ${m.name}`, 1.0);
-}
-
-/* =========================
-   XP/레벨업(연속 처리 안전)
-========================= */
-function gainXp(v){
-  if (state.stageMod === "xp") v = Math.floor(v*1.25);
-  state.xp += v;
-
-  while (state.xp >= state.xpNeed){
-    state.xp -= state.xpNeed;
-    state.xpNeed = Math.floor(state.xpNeed * 1.35);
-    state.level++;
-      // Midgame fun: after 3 minutes, every 2 levels grant a small free bonus (no UI choice needed)
-      if ((state.elapsed||0) >= 180 && state.level % 2 === 0){
-        const r = Math.random();
-        if (r < 0.30){ state.atk += 1.5; toast("각성: 공격력 +1.5"); }
-        else if (r < 0.55){ state.as += 0.25; toast("각성: 공격속도 +0.25"); }
-        else if (r < 0.75){ state.ms += 20; toast("각성: 이동속도 +20"); }
-        else { state.maxHp += 10; state.hp = Math.min(state.maxHp, state.hp + 10); toast("각성: 최대체력 +10"); }
-      }
-    openLevelUp();
-    break; // 레벨업 열면 pause 되므로 1회만
-  }
-}
-
-/* =========================
-   피격/회복/폭탄(엘리트 즉사 금지)
-========================= */
-function playerInSmoke(){
-  for (const f of fields){
-    if (f.kind!=="smoke") continue;
-    if (dist2(f.x,f.y,player.x,player.y) <= f.r*f.r) return true;
-  }
-  return false;
-}
-
-function hitPlayer(dmg){
-  if (state.ifrT > 0) return;
-  if (playerInSmoke()) return;
-
+state.hurtPlayer = function(amount){
   if (state.shieldCharges > 0){
     state.shieldCharges--;
-    state.ifrT = 0.25;
-    state.hurtFlash = 0.12;
-    showToast("보호막!", 0.5);
+    state.hurtFlash = Math.max(state.hurtFlash, 0.22);
+    state.ifrT = Math.max(state.ifrT, 0.25);
+    showToast("보호막!", 0.6);
     return;
   }
-
-  state.hp -= dmg;
-  state.hurtFlash = 0.14;
+  state.hp -= amount;
+  state.hurtFlash = Math.max(state.hurtFlash, 0.65);
   state.ifrT = state.iframes;
+};
 
-  if (state.hp <= 0) endGame(false);
-}
+/* =========================
+   11) 적 이동 패턴
+========================= */
+function computeEnemyVelocity(e, dt){
+  const fear = (e.fearT > 0);
+  const dx = player.x - e.x, dy = player.y - e.y;
+  const v = norm(dx,dy);
+  let vx=v.x, vy=v.y;
 
-function healPlayer(amount){
-  if (amount <= 0) return;
-  state.hp = Math.min(state.maxHp, state.hp + amount);
-}
-
-function applyExplosion(x,y, radius, damage){
-  // ✅ 폭탄/폭발로 엘리트 즉사 금지(요구사항 1)
-  for (const e of enemies){
-    if (dist2(x,y,e.x,e.y) > radius*radius) continue;
-
-    if (e.elite){
-      // 엘리트는 "남은 체력-1"까지만 깎을 수 있음 (즉사 방지)
-      const cap = Math.max(0, e.hp - 1);
-      const dealt = Math.min(damage, cap);
-      e.hp -= dealt;
-      if (dealt > 0) e.hitFlash = 0.08;
-    } else {
-      e.hp -= damage;
-      e.hitFlash = 0.08;
-    }
+  if (e.behavior === "strafe"){
+    e.jukeT -= dt;
+    if (e.jukeT <= 0){ e.jukeT = rand(0.6, 1.6); e.jukeDir *= -1; }
+    const pxn = -v.y, pyn = v.x;
+    vx = v.x*0.78 + pxn*(0.55*e.jukeDir);
+    vy = v.y*0.78 + pyn*(0.55*e.jukeDir);
+    const n = norm(vx,vy); vx=n.x; vy=n.y;
   }
 
-  spawnField("blast", x, y, radius, 0.25, 20, {});
+  if (e.behavior === "orbit"){
+    const pxn = -v.y, pyn = v.x;
+    const sign = (e.phase > Math.PI ? 1 : -1);
+    const err = (v.d - e.preferR);
+    const toward = clamp(err/140, -0.7, 0.7);
+    vx = v.x*toward + pxn*(0.85*sign);
+    vy = v.y*toward + pyn*(0.85*sign);
+    const n = norm(vx,vy); vx=n.x; vy=n.y;
+    e.phase += dt*0.9;
+    if (e.phase > Math.PI*2) e.phase -= Math.PI*2;
+  }
+
+  if (e.behavior === "swarm"){
+    const targetR = e.preferR;
+    const err = v.d - targetR;
+    const k = clamp(err/120, -1, 1);
+    const pxn = -v.y, pyn = v.x;
+    vx = v.x*k + pxn*0.35*Math.sin(e.phase);
+    vy = v.y*k + pyn*0.35*Math.sin(e.phase);
+    const n = norm(vx,vy); vx=n.x; vy=n.y;
+    e.phase += dt*1.7;
+    if (e.phase > Math.PI*2) e.phase -= Math.PI*2;
+  }
+
+  if (fear){ vx=-vx; vy=-vy; }
+  return {vx,vy};
 }
 
 /* =========================
-   탄환 시스템
-   - (5) 탄환별 공격속도 다르게
-   - (6) 시너지 탄환은 "각 시너지별로 따로" 발사
-   - (3) 닌자도 시너지 탄환 발사 (버그 수정)
+   12) 전기 체인 (기본 원소 전기)
 ========================= */
-// ✅ 호환용: 다른 버전에서 쓰던 이름
-function fireBulletTowards(target, dmg, speed, tags=[], pierce=0, radius=4, life=2.0){
-  return fireBulletFrom(player.x, player.y, target, dmg, speed, tags, pierce, radius, life);
-}
-
-// ✅ 호환용: 다른 버전에서 쓰던 이름
-function spawnEnemyNear(x, y, opts = {}){
-  return spawnEnemyAt(x + rand(-16,16), y + rand(-16,16), opts);
-}
-
-function fireBulletFrom(x, y, target, dmg, speed, tags, pierce, radius=4, life=2.1){
-  const ang = Math.atan2(target.y - y, target.x - x);
-  bullets.push({
-    x, y,
-    vx: Math.cos(ang) * speed,
-    vy: Math.sin(ang) * speed,
-    r: radius,
-    dmg,
-    tags: new Set(tags),
-    pierce,
-    hitSet: new Set(),
-    life,
-  });
-}
-
-
-// ✅ 탄환별 쿨다운(각 발사채널 분리)
-state.shootCdBase = 0;
-state.shootCdPending = 0;
-state.shootCdSynergy = new Map(); // key -> cd
-
-function stepCdMaps(dt){
-  state.shootCdBase = Math.max(0, state.shootCdBase - dt);
-  state.shootCdPending = Math.max(0, state.shootCdPending - dt);
-
-  for (const [k,v] of state.shootCdSynergy.entries()){
-    const nv = v - dt;
-    if (nv <= 0) state.shootCdSynergy.delete(k);
-    else state.shootCdSynergy.set(k, nv);
-  }
-}
-
-// 기본 원소 효과(최소)
-function chainLightning(firstEnemy, baseDamage, maxChains=3, range=150){
+function chainLightning(firstEnemy, baseDamage, maxChains=3, range=140){
   const c=[];
   for(const e of enemies){
     if(e===firstEnemy) continue;
@@ -1092,1756 +677,1125 @@ function chainLightning(firstEnemy, baseDamage, maxChains=3, range=150){
   c.sort((a,b)=>a.d-b.d);
   for(let i=0;i<Math.min(maxChains,c.length);i++){
     c[i].e.hp -= baseDamage;
-    spawnField("lightning", c[i].e.x, c[i].e.y, 28, 0.16, 0, {});
   }
 }
 
-
-function onHitEnemy(b, e){
-  e.hitFlash = 0.08;
-// 1) 기본/치명타 피해
-let dmg = b.dmg;
-
-// 치명타 판정
-const critChance = state.crit ?? 0.06;
-const critMul = 1.75;   // 크리 배율(원하면 1.6~2.0)
-let isCrit = false;
-
-if (Math.random() < critChance){
-  isCrit = true;
-  dmg *= critMul;
-
-  // ✅ 3번 효과: 크리 시 잠깐 슬로우
-  e.slowT = Math.max(e.slowT, 0.6);
-
-   e.critFlash = 0.35;   // 0.35초 동안 무지개
-
-  spawnField("wave", e.x, e.y, 70, 0.18, 0, {});
+/* =========================
+   13) 필드 생성 + 덕지덕지 방지(merge)
+   - 같은 kind가 근처에 있으면 합치기
+========================= */
+function spawnField(kind, x, y, r, life, power, meta={}){
+  // merge
+  for (const f of fields){
+    if (f.kind !== kind) continue;
+    if (dist2(f.x,f.y,x,y) < 70*70){
+      f.r = Math.min(f.r + r*0.22, r*1.55);
+      f.life = Math.max(f.life, life);
+      f.power = Math.max(f.power, power);
+      // 위치는 평균으로 약간 보정
+      f.x = (f.x*0.7 + x*0.3);
+      f.y = (f.y*0.7 + y*0.3);
+      return;
+    }
+  }
+  fields.push({kind,x,y,r,life,power,meta});
+}
+function spawnSummon(kind, x, y, life, power, meta={}){
+  summons.push({kind,x,y,life,cd:0,power,meta});
 }
 
-e.hp -= dmg;
-
-// ✅ 생존흡혈(있으면)
-if ((state.vamp ?? 0) > 0){
-  const heal = dmg * state.vamp;
-  state.hp = Math.min(state.maxHp, state.hp + heal);
-}
-
-
-  // 흡혈/치명 (간단)
-  if (chance(state.crit)) e.hp -= b.dmg * 0.55;
-  healPlayer(Math.floor(b.dmg * state.vamp));
-
-  if (b.tags.has("water")) e.slowT = Math.max(e.slowT, 1.2);
-  if (b.tags.has("fire")){
-    e.burnT = Math.max(e.burnT, 2.0);
-    e.burnDps = Math.max(e.burnDps, 3 + state.atk*0.12);
-  }
-  if (b.tags.has("electric")) chainLightning(e, state.atk*0.22, 3, 150);
-  if (b.tags.has("wind")){
-    const v = norm(e.x - player.x, e.y - player.y);
-    e.x += v.x*16;
-    e.y += v.y*16;
-  }
-  if (b.tags.has("dark")) e.fearT = Math.max(e.fearT, 1.0);
-
-  // 시너지 탄환(태그 2개) → 맞을 때 시너지 효과(필드는 Part3에서 렌더 더 강화)
-  if (b.tags.size === 2){
-    const els = [...b.tags];
-    applySynergyOnHit(e, els[0], els[1]);
-  }
-}
-
-// ✅ 시너지 효과(너무 복잡하게 안가고, 체감/긴장감 위주)
-function applySynergyOnHit(enemy, a, b){
-  const k = [a,b].sort().join("_");
+/* =========================
+   14) 시너지 적용(피격/사격)
+========================= */
+function applySynergyOnHit(enemy, tags){
+  const els = [...tags].filter(t=>KR_EL[t]);
+  if (els.length < 2) return;
+  const k = keyPair(els[0], els[1]);
   const stack = state.synergyStacks.get(k) ?? 0;
   if (stack <= 0) return;
 
   switch(k){
-    case "fire_water":     spawnField("smoke", enemy.x, enemy.y, 90+8*stack, 3.0+0.2*stack, 1, {}); break;
-    case "electric_water": spawnField("storm", enemy.x, enemy.y, 100+10*stack, 3.0, 9+2*stack, {}); break;
-    case "water_wind":     spawnField("tornado", enemy.x, enemy.y, 70+6*stack, 1.6+0.1*stack, 12+2*stack, {vx:rand(-1,1),vy:rand(-1,1)}); break;
-    case "dark_light":     spawnField("eclipse", enemy.x, enemy.y, 120+10*stack, 2.4, 12+2*stack, {}); break;
+    case "fire_water":      spawnField("smoke", enemy.x, enemy.y, 85 + 8*stack, 3.0 + 0.2*stack, 1, {}); break;
+    case "electric_water":  spawnField("storm", enemy.x, enemy.y, 95 + 10*stack, 3.0, 8 + 2*stack, {}); break;
+    case "water_wind":      spawnField("tornado", enemy.x, enemy.y, 60 + 6*stack, 1.6 + 0.1*stack, 14 + 2*stack, {vx: rand(-1,1), vy: rand(-1,1)}); break;
+    case "light_water":     spawnSummon("plant", enemy.x, enemy.y, 8.0 + 0.7*stack, 1 + 0.25*stack, {}); break;
+    case "dark_water":      spawnField("oil", enemy.x, enemy.y, 90 + 8*stack, 6.0, 1, {}); break;
 
-    // 모노(같은 원소)
-    case "fire_fire":      spawnField("blast", enemy.x, enemy.y, 95+8*stack, 0.30, 18+3*stack, {}); break;
-    case "water_water":    spawnField("frost", enemy.x, enemy.y, 120+10*stack, 2.5, 1+stack, {}); break;
-    case "electric_electric":
-      // 낙뢰 1~3회
-      for (let i=0;i<Math.min(3, 1+Math.floor(stack/2));i++){
-        const t = enemies[Math.floor(Math.random()*enemies.length)];
-        if (!t) break;
-        t.hp -= state.atk*(0.50 + 0.12*Math.min(4,stack));
-        spawnField("lightning", t.x, t.y, 34, 0.15, 0, {});
-      }
-      break;
+    case "electric_fire":   spawnField("blast", enemy.x, enemy.y, 70 + 6*stack, 0.30, 22 + 3*stack, {}); break;
+    case "fire_wind":       spawnField("firevortex", enemy.x, enemy.y, 85 + 8*stack, 2.2, 10 + 2*stack, {}); break;
+    case "fire_light":      spawnField("flare", enemy.x, enemy.y, 90 + 6*stack, 1.2, 16 + 2*stack, {}); break;
+    case "dark_fire":       enemy.misc.curseBoom = Math.max(enemy.misc.curseBoom ?? 0, 2 + stack); break;
+
+    case "electric_wind":   spawnField("spark", enemy.x, enemy.y, 95 + 8*stack, 2.0, 1 + stack, {}); break;
+    case "electric_light":  enemy.misc.prism = Math.max(enemy.misc.prism ?? 0, 2 + stack); break;
+    case "dark_electric":   spawnField("darkbolt", enemy.x, enemy.y, 90, 0.55, 18 + 3*stack, {}); break;
+
+    case "light_wind":      spawnSummon("shards", enemy.x, enemy.y, 4.0, 1 + 0.3*stack, {}); break;
+    case "dark_wind":       enemy.fearT = Math.max(enemy.fearT, 0.6 + 0.12*stack); break;
+    case "dark_light":      spawnField("eclipse", enemy.x, enemy.y, 110 + 10*stack, 2.0, 12 + 2*stack, {}); break;
+
+    // 모노 시너지(같은 원소)
+    case "water_water":     spawnField("frost", enemy.x, enemy.y, 80 + 8*stack, 1.2, 1, {}); break;
+    case "fire_fire":       spawnField("ringfire", enemy.x, enemy.y, 85 + 6*stack, 1.0, 10 + 2*stack, {}); break;
+    case "electric_electric": spawnField("lightning", enemy.x, enemy.y, 40, 0.25, 26 + 4*stack, {}); break;
+    case "wind_wind":       spawnField("gust", enemy.x, enemy.y, 80, 0.6, 10 + 2*stack, {}); break;
+    case "light_light":     state.shieldCharges = Math.min(3, state.shieldCharges + 1); break;
+    case "dark_dark":       spawnSummon("shadow", enemy.x, enemy.y, 5.5, 1 + 0.25*stack, {}); break;
   }
 }
 
-// ✅ 발사 로직
-function shootSystem(dt){
-  stepCdMaps(dt);
-  const t = nearestEnemy();
-  if (!t) return;
-
-  // 캐릭터별 계수(닌자도 탄환 발사 = 버그 수정)
-  const charRateMul = (state.character==="ninja") ? 0.78 : 1.0;
-  const charDmgMul  = (state.character==="ninja") ? 0.88 : 1.0;
-
-  // 1) 기본 탄환: 빠르게(시각적으로 연사 느낌)
-  if (state.shootCdBase <= 0){
-    const baseRate = (1.00 / state.as) * 0.55; // ✅ 기본탄은 더 자주
-    state.shootCdBase = baseRate / charRateMul;
-
-    const dmg = state.atk * 0.62 * charDmgMul;
-    fireBulletFrom(player.x, player.y, t, dmg, 560, [], 0, 3, 1.9);
-  }
-
-  // 2) 대기 원소 탄환: 중간 속도(기본과 다른 템포)
-  if (state.pendingEl && state.shootCdPending <= 0){
-    const pendingRate = (1.00 / state.as) * 0.95; // 기본보다 느리게
-    state.shootCdPending = pendingRate / charRateMul;
-
-    const dmg = state.atk * 0.52 * charDmgMul;
-    fireBulletFrom(player.x, player.y, t, dmg, 540, [state.pendingEl], 0, 4, 2.0);
-  }
-
-  // 3) 시너지 탄환: "완성된 시너지" 각각이 개별 발사채널을 가짐
-  //    - (6) 시너지들이 하나로 합쳐져 나가는 문제 방지: k별로 cd 별도
+function applySynergyOnShot(target){
   for (const [k,stack] of state.synergyStacks.entries()){
-    const cd = state.shootCdSynergy.get(k) ?? 0;
-    if (cd > 0) continue;
+    if (stack <= 0) continue;
 
-    const [a,b] = k.split("_");
-    // 시너지는 더 느리지만 한 번에 "2발"로 보이게(연사/탄막 느낌)
-    // 스택이 올라가면 약간 빨라짐(너무 과하면 안됨)
-    const rate = (1.00 / state.as) * lerp(1.40, 1.05, Math.min(1, stack/6));
-    state.shootCdSynergy.set(k, rate / charRateMul);
-
-    // 데미지 밸런스: 스택이 오를수록 소폭 증가
-    const dmgBase = state.atk * (0.45 + 0.06*Math.min(6,stack)) * charDmgMul;
-
-    // ✅ 시너지별로 "따로" 나가도록: 동일 타이밍에 2발(시각적 분리)
-    fireBulletFrom(player.x, player.y, t, dmgBase, 520, [a,b], 1, 7, 2.0);
-    // 두 번째는 아주 약간 느린 속도/다른 수명으로 ‘겹쳐보임’ 방지
-    fireBulletFrom(player.x, player.y, t, dmgBase*0.92, 480, [a,b], 1, 7, 2.1);
-  }
-
-  // 장비 clone: 보조 사격(랜덤)
-  const cl = gearLevel("clone");
-  if (cl > 0 && chance(0.18 + 0.03*Math.min(7,cl))){
-    const dmg = state.atk*(0.22+0.04*cl) * charDmgMul;
-    fireBulletFrom(player.x, player.y, t, dmg, 620, [], 0, 3, 1.5);
+    if (k==="electric_electric" && Math.random() < (0.10 + 0.03*Math.min(6,stack)) && enemies.length){
+      const e = enemies[Math.floor(Math.random()*enemies.length)];
+      spawnField("lightning", e.x, e.y, 45, 0.25, 24 + 4*stack, {});
+    }
+    if (k==="light_light"){
+      state.shieldRegenT -= 0.08;
+      if (state.shieldRegenT <= 0){
+        state.shieldRegenT = Math.max(0.9, 2.2 - 0.15*Math.min(6,stack));
+        state.shieldCharges = Math.min(3, state.shieldCharges + 1);
+      }
+    }
+    if (k==="dark_water" && Math.random() < (0.12 + 0.02*Math.min(6,stack))){
+      spawnField("oil", target.x, target.y, 75 + 6*stack, 5.0, 1, {});
+    }
   }
 }
 
 /* =========================
-   닌자 근접(기존 개념 유지, 난이도 맞춰 약간 상향)
+   15) 장비 틱
 ========================= */
-function ninjaMeleeTick(dt){
-  if (state.character !== "ninja") return;
-
-  state.ninjaBladeAngle += dt * (3.9 + state.as*0.35);
-
-  const range = state.ninjaRangeBase + Math.min(56, state.level*state.ninjaRangeScale);
-  const width = state.ninjaRingWidth;
-
-  state.ninjaHitGlobalCd = Math.max(0, state.ninjaHitGlobalCd - dt);
-  if (state.ninjaHitGlobalCd > 0) return;
-
-  const baseCd = 0.27;
-  const cd = Math.max(0.20, baseCd - 0.01*Math.min(6, gearLevel("saw")));
-  state.ninjaHitGlobalCd = cd;
-
-  const candidates = [];
-  for (const e of enemies){
-    const d = dist(player.x, player.y, e.x, e.y);
-    const ringDist = Math.abs(d - range);
-    if (ringDist <= (width + e.r)){
-      const q = 1 - clamp(ringDist / (width + e.r), 0, 1);
-      candidates.push({e, q});
-    }
-  }
-  candidates.sort((a,b)=>b.q-a.q);
-
-  const hitN = Math.min(state.ninjaMaxTargets, candidates.length);
-  const baseDmg = state.atk * state.ninjaDmgScale;
-
-  for (let i=0;i<hitN;i++){
-    const e = candidates[i].e;
-    const q = candidates[i].q;
-    const eliteMul = e.elite ? 0.80 : 1.0;
-    const mul = eliteMul * (0.55 + 0.45*q);
-    e.hp -= baseDmg * mul;
-    e.hitFlash = 0.06;
-    const v = norm(e.x - player.x, e.y - player.y);
-    e.x += v.x * 10;
-    e.y += v.y * 10;
-  }
-}
-
-/* =========================
-   장비 지속효과(가시성은 Part3에서 더 강화)
-========================= */
-function updateGearAuras(dt){
-  // thorns: 근접 도트
-  const th = gearLevel("thorns");
-  if (th > 0){
-    const r = 46 + th*6;
+function tickGear(dt){
+  // 톱날 드론
+  const saw = gearLevel("saw");
+  if (saw > 0){
+    const range = 55 + 6*Math.min(10,saw);
+    const dps = state.atk*(0.22 + 0.04*Math.min(10,saw));
     for (const e of enemies){
-      if (dist2(player.x,player.y,e.x,e.y) <= r*r){
-        e.hp -= (dt * (2.7 + th*1.3));
+      if (dist2(player.x,player.y,e.x,e.y) < (range+e.r)**2){
+        e.hp -= dps * dt;
       }
     }
   }
 
-  // saw: 주변 도트
-  const sw = gearLevel("saw");
-  if (sw > 0){
-    const r = 76 + sw*8;
-    for (const e of enemies){
-      if (dist2(player.x,player.y,e.x,e.y) <= r*r){
-        e.hp -= (dt * (2.1 + sw*1.5));
-      }
-    }
-  }
-
-  // blackhole: 주기 흡인
+  // 블랙홀
   const bh = gearLevel("blackhole");
   if (bh > 0){
     state._bhCd -= dt;
+    const cd = Math.max(4.4, 7.2 - 0.32*Math.min(10,bh));
     if (state._bhCd <= 0){
-      state._bhCd = Math.max(3.6, 5.8 - bh*0.35);
-      spawnField("eclipse", player.x, player.y, 150 + bh*10, 1.25, 0, {pull: 560 + bh*150});
-      showToast("블랙홀!", 0.6);
-    }
-    for (const f of fields){
-      if (f.kind!=="eclipse") continue;
-      const pull = f.meta.pull ?? 0;
-      if (!pull) continue;
-      for (const e of enemies){
-        if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-          const v = norm(f.x - e.x, f.y - e.y);
-          e.x += v.x * pull * dt * 0.08;
-          e.y += v.y * pull * dt * 0.08;
-        }
-      }
+      state._bhCd = cd;
+      spawnField("eclipse", player.x, player.y, 95 + 7*bh, 1.55 + 0.05*bh, 9 + 2*bh, {});
     }
   }
 
-  // shield: 충전
-  const sh = gearLevel("shield");
-  if (sh > 0){
-    state.shieldRegenT -= dt;
-    const cd = Math.max(5.8, 7.8 - sh*0.35);
-    if (state.shieldRegenT <= 0){
-      state.shieldRegenT = cd;
-      if (state.shieldCharges < 3){
-        state.shieldCharges++;
-        showToast("보호막 충전", 0.5);
+  // 가시 오라
+  const th = gearLevel("thorns");
+  if (th > 0){
+    const range = 38 + 4*th;
+    const dps = state.atk*(0.10 + 0.02*th);
+    for (const e of enemies){
+      if (dist2(player.x,player.y,e.x,e.y) < (range+e.r)**2){
+        e.hp -= dps * dt;
       }
     }
   }
 }
 
 /* =========================
-   필드 업데이트(도트/장판)
+   16) 필드/소환 틱
 ========================= */
-function updateFields(dt){
+function tickFields(dt){
   for (let i=fields.length-1;i>=0;i--){
     const f = fields[i];
     f.life -= dt;
     if (f.life <= 0){ fields.splice(i,1); continue; }
 
+    if (f.kind==="smoke"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.slowT = Math.max(e.slowT, 0.3);
+          e.misc.inSmoke = 0.2;
+        }
+      }
+    }
+
     if (f.kind==="storm"){
       for (const e of enemies){
-        if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-          e.hp -= (f.power * dt);
-          e.hitFlash = 0.03;
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power * dt;
         }
       }
     }
 
     if (f.kind==="tornado"){
-      const vx = (f.meta.vx ?? 0) * 80;
-      const vy = (f.meta.vy ?? 0) * 80;
-      f.x += vx*dt; f.y += vy*dt;
+      const n = norm(f.meta.vx ?? 0, f.meta.vy ?? 0);
+      const w=W(), h=H();
+      f.x = clamp(f.x + n.x*260*dt, 10, w-10);
+      f.y = clamp(f.y + n.y*260*dt, 10, h-10);
       for (const e of enemies){
-        if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-          e.hp -= (f.power*0.6*dt);
-          const v = norm(e.x - f.x, e.y - f.y);
-          e.x += v.x*14*dt;
-          e.y += v.y*14*dt;
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power * dt;
         }
       }
+    }
+
+    if (f.kind==="oil"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.slowT = Math.max(e.slowT, 0.8);
+          if (e.burnT > 0){
+            e.burnDps = Math.max(e.burnDps, 16);
+            e.burnT = Math.max(e.burnT, 2.5);
+          }
+        }
+      }
+    }
+
+    if (f.kind==="blast"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power;
+        }
+      }
+      f.life = 0;
+    }
+
+    if (f.kind==="firevortex" || f.kind==="flare"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power * dt;
+          if (f.kind==="firevortex"){
+            const v = norm(e.x-f.x, e.y-f.y);
+            e.x += v.x*10*dt; e.y += v.y*10*dt;
+          }
+        }
+      }
+    }
+
+    if (f.kind==="spark"){
+      if (Math.random() < 0.20*dt*f.power && enemies.length){
+        const e = enemies[Math.floor(Math.random()*enemies.length)];
+        e.hp -= 14 + 2*Math.min(6,f.power);
+      }
+    }
+
+    if (f.kind==="darkbolt"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power;
+        }
+      }
+      f.life = 0;
     }
 
     if (f.kind==="eclipse"){
       for (const e of enemies){
-        if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-          e.slowT = Math.max(e.slowT, 0.6);
-          e.hp -= (f.power*0.35*dt);
-        }
-      }
-    }
-
-    if (f.kind==="smoke"){
-      // 효과는 hitPlayer에서 처리
-    }
-
-    if (f.kind==="blast" || f.kind==="flare"){
-      for (const e of enemies){
-        if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-          e.hp -= (f.power*dt);
+        const d2 = dist2(f.x,f.y,e.x,e.y);
+        if (d2 < (f.r + e.r)**2){
+          const v = norm(f.x - e.x, f.y - e.y);
+          e.x += v.x*90*dt;
+          e.y += v.y*90*dt;
+          e.hp -= f.power*dt;
         }
       }
     }
 
     if (f.kind==="acid"){
-      if (dist2(f.x,f.y,player.x,player.y) <= (f.r+player.r)*(f.r+player.r)){
-        hitPlayer(10*dt);
+      if (dist2(f.x,f.y,player.x,player.y) < (f.r + player.r)**2 && state.ifrT<=0){
+        state.hurtPlayer(6);
       }
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power*dt;
+        }
+      }
+    }
+
+    if (f.kind==="wave"){
+      // 피해는 eliteTick에서만
+    }
+
+    if (f.kind==="frost"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.slowT = Math.max(e.slowT, 1.0);
+        }
+      }
+    }
+
+    if (f.kind==="ringfire" || f.kind==="gust"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power*dt;
+          if (f.kind==="gust") e.fearT = Math.max(e.fearT, 0.25);
+        }
+      }
+    }
+
+    if (f.kind==="lightning"){
+      for (const e of enemies){
+        if (dist2(f.x,f.y,e.x,e.y) < (f.r + e.r)**2){
+          e.hp -= f.power;
+        }
+      }
+      f.life = 0;
     }
   }
 }
 
-/* =========================
-   소환(간단)
-========================= */
-function updateSummons(dt){
+function tickSummons(dt){
   for (let i=summons.length-1;i>=0;i--){
     const s = summons[i];
     s.life -= dt;
-    if (s.life<=0){ summons.splice(i,1); continue; }
+    if (s.life <= 0){ summons.splice(i,1); continue; }
+
     s.cd -= dt;
 
     if (s.kind==="plant"){
-      if (s.cd<=0){
-        s.cd = 0.6;
-        const t = nearestEnemy();
-        if (t) fireBulletFrom(s.x, s.y, t, state.atk*(0.22+0.10*s.power), 520, [], 0, 3, 1.4);
+      if (s.cd <= 0){
+        s.cd = Math.max(0.55, 1.2 - 0.08*Math.min(6,s.power));
+        if (enemies.length){
+          let best=null, bd=1e9;
+          for (const e of enemies){
+            const d2 = dist2(s.x,s.y,e.x,e.y);
+            if (d2 < bd){ bd=d2; best=e; }
+          }
+          if (best){
+            const ang = Math.atan2(best.y - s.y, best.x - s.x);
+            bullets.push({x:s.x,y:s.y,vx:Math.cos(ang)*520,vy:Math.sin(ang)*520,r:5,dmg:state.atk*(0.40+0.07*s.power),tags:new Set(["plantshot"]),pierce:0,hitSet:new Set(),life:2.0});
+          }
+        }
+      }
+    }
+
+    if (s.kind==="shards"){
+      if (s.cd <= 0){
+        s.cd = 0.35;
+        if (enemies.length){
+          const e = enemies[Math.floor(Math.random()*enemies.length)];
+          e.hp -= state.atk*(0.20 + 0.05*Math.min(6,s.power));
+        }
+      }
+    }
+
+    if (s.kind==="shadow"){
+      if (s.cd <= 0){
+        s.cd = 0.8;
+        if (enemies.length){
+          const e = enemies[Math.floor(Math.random()*enemies.length)];
+          const ang = Math.atan2(e.y - s.y, e.x - s.x);
+          bullets.push({x:s.x,y:s.y,vx:Math.cos(ang)*540,vy:Math.sin(ang)*540,r:4,dmg:state.atk*(0.30+0.05*s.power),tags:new Set(["shadowshot"]),pierce:0,hitSet:new Set(),life:2.0});
+        }
       }
     }
   }
 }
 
 /* =========================
-   아이템 사용
+   17) 전투(원거리 / 닌자)
 ========================= */
-function useItem(type){
-  if (type==="heal"){
-    const heal = Math.floor(state.maxHp*0.35);
-    state.hp = Math.min(state.maxHp, state.hp + heal);
-    showToast(`회복 +${heal}`, 0.9);
-    state.score += 25;
+function nearestEnemy(){
+  if (!enemies.length) return null;
+  let best=enemies[0], bestD=dist2(player.x,player.y,enemies[0].x,enemies[0].y);
+  for (let i=1;i<enemies.length;i++){
+    const d=dist2(player.x,player.y,enemies[i].x,enemies[i].y);
+    if (d<bestD){ bestD=d; best=enemies[i]; }
   }
-  if (type==="freeze"){
-    state.freezeT = 2.3;
-    showToast("빙결!", 0.9);
-    state.score += 25;
+  return best;
+}
+
+function fireBulletTowards(target, dmg, speed, tags, pierce, radius=4, life=2.1){
+  const ang = Math.atan2(target.y-player.y, target.x-player.x);
+  bullets.push({
+    x:player.x, y:player.y,
+    vx:Math.cos(ang)*speed,
+    vy:Math.sin(ang)*speed,
+    r:radius,
+    dmg,
+    tags:new Set(tags),
+    pierce,
+    hitSet:new Set(),
+    life,
+  });
+}
+
+let shootCd = 0;
+function shoot(dt){
+  shootCd -= dt;
+  if (shootCd > 0) return;
+  shootCd = 1 / state.as;
+
+  const t = nearestEnemy();
+  if (!t) return;
+
+  // 원거리만 기본탄
+  if (state.character === "ranged"){
+    fireBulletTowards(t, state.atk, 540, [], 0, 4);
   }
-  if (type==="nuke"){
-    // ✅ 전멸: 일반몹만 제거, 엘리트는 체력 크게 깎되 즉사 금지
-    for (const e of enemies){
-      if (!e.elite) e.hp = -999;
-      else e.hp = Math.max(1, e.hp - (e.maxHp*0.55));
-    }
-    applyExplosion(player.x, player.y, 220, 0); // 시각 효과용
-    showToast("전멸(엘리트 제외)!", 1.0);
-    state.score += 60;
+
+  // 대기 원소 추가탄
+  if (state.pendingEl){
+    fireBulletTowards(t, state.atk*0.62, 560, [state.pendingEl], 0, 4);
+  }
+
+  // 시너지탄: 큼 + 관통
+  for (const [k,stack] of state.synergyStacks.entries()){
+    const [a,b]=k.split("_");
+    const dmg = state.atk * (0.68 + 0.07*Math.min(4,stack));
+    fireBulletTowards(t, dmg, 520, [a,b], 2, 8, 2.0);
+  }
+
+  // 분신 장비: 보조탄
+  const cl = gearLevel("clone");
+  if (cl > 0 && Math.random() < 0.35){
+    fireBulletTowards(t, state.atk*(0.32+0.06*Math.min(6,cl)), 560, [], 0, 4, 1.8);
+  }
+
+  applySynergyOnShot(t);
+}
+
+function ninjaMeleeTick(dt){
+  if (state.character !== "ninja") return;
+
+  // ✅ 닌자 밸런스(사기 방지):
+  // - 링 판정 타격
+  // - 적별 히트 쿨다운
+  // - 동시에 맞는 적 수 제한(캡)
+  // - 후반 스케일 완만
+  const range = 52 + Math.min(44, state.level*1.2);
+  state.ninjaBladeAngle += dt * (4.0 + state.as*0.42);
+
+  const hitCd = 0.28; // 이전보다 느리게
+  const base = 0.72 + 0.04*Math.min(10, state.level); // 완만 성장
+  const hitDmg = state.atk * base;
+  const hitThickness = 12;
+  const maxTargets = 4 + Math.floor(Math.min(6, state.level/8)); // 동시타격 제한
+
+  // 가까운 적부터 처리 (캡 적용)
+  const cand = [];
+  for (const e of enemies){
+    const d = dist(player.x, player.y, e.x, e.y);
+    if (Math.abs(d - range) <= (hitThickness + e.r)) cand.push({e,d});
+  }
+  cand.sort((a,b)=>a.d-b.d);
+
+  let hitCount = 0;
+  for (const {e} of cand){
+    if (hitCount >= maxTargets) break;
+
+    e.misc.ninjaHitT = Math.max(0, (e.misc.ninjaHitT ?? 0) - dt);
+    if (e.misc.ninjaHitT > 0) continue;
+
+    e.misc.ninjaHitT = hitCd;
+    e.hp -= hitDmg;
+    hitCount++;
+
+    // 약한 넉백(타격감)
+    const v = norm(e.x - player.x, e.y - player.y);
+    e.x += v.x * 14;
+    e.y += v.y * 14;
   }
 }
 
 /* =========================
-   엘리트 기믹 업데이트
+   18) 피격 처리(원소/시너지)
 ========================= */
-function updateElite(dt, e){
-  if (!e.elite) return;
+function onHit(enemy, bullet){
+  enemy.hp -= bullet.dmg;
+  const tags = bullet.tags;
 
-  if (e.type==="charger"){
-    e.misc.dashCd = (e.misc.dashCd ?? 2.0) - dt;
-    if (e.misc.dashCd <= 0){
-      e.misc.dashCd = 2.0;
-      e.misc.dashT = 0.35;
-      spawnField("wave", e.x, e.y, 90, 0.25, 1, {});
-    }
-    if ((e.misc.dashT ?? 0) > 0){
-      e.misc.dashT -= dt;
-      const v = norm(player.x - e.x, player.y - e.y);
-      e.x += v.x * 470 * dt;
-      e.y += v.y * 470 * dt;
-    }
+  // 단일 원소 효과
+  if (tags.has("water")) enemy.slowT = Math.max(enemy.slowT, 1.5);
+  if (tags.has("fire")){
+    enemy.burnT = Math.max(enemy.burnT, 2.0);
+    enemy.burnDps = Math.max(enemy.burnDps, 10);
   }
-
-  if (e.type==="summoner"){
-    e.misc.summonCd = (e.misc.summonCd ?? 2.8) - dt;
-    if (e.misc.summonCd <= 0){
-      e.misc.summonCd = 2.8;
-      for (let k=0;k<4;k++) spawnEnemyAt(e.x,e.y,{kind:"mini"});
-      spawnField("gust", e.x, e.y, 120, 0.35, 10, {});
-    }
+  if (tags.has("electric")) chainLightning(enemy, 9, 3, 140);
+  if (tags.has("wind")){
+    const v = norm(enemy.x-player.x, enemy.y-player.y);
+    enemy.x += v.x*14; enemy.y += v.y*14;
   }
+  if (tags.has("dark")) enemy.fearT = Math.max(enemy.fearT, 1.0);
 
-  if (e.type==="bomber"){
-    e.misc.fuse = (e.misc.fuse ?? 0) + dt;
-    if (e.misc.fuse > 2.4){
-      e.misc.fuse = 0;
-      applyExplosion(e.x, e.y, 120, 26);
-    }
-  }
+  applySynergyOnHit(enemy, tags);
+}
 
-  if (e.type==="waver"){
-    e.misc.waveCd = (e.misc.waveCd ?? 2.2) - dt;
-    if (e.misc.waveCd<=0){
-      e.misc.waveCd = 2.2;
-      spawnField("wave", e.x, e.y, 170, 0.8, 1, {});
-      // 파동 안에 있으면 맞는 건 Part3에서 강화(지금은 시각 위주)
-    }
-  }
+/* =========================
+   19) 엘리트 패턴
+========================= */
+function eliteTick(e, dt){
+  if (state.freezeT > 0) return;
+  const toP = norm(player.x - e.x, player.y - e.y);
 
-  if (e.type==="sniper"){
-    e.misc.shotCd = (e.misc.shotCd ?? 1.6) - dt;
-    if (e.misc.shotCd<=0){
-      e.misc.shotCd = 1.6;
-      spawnField("darkbolt", player.x, player.y, 70, 0.14, 0, {});
-      hitPlayer(11);
-    }
-  }
+  switch(e.type){
+    case "charger":
+      e.misc.dashCd -= dt;
+      if (e.misc.dashCd <= 0){ e.misc.dashCd = 2.2; e.misc.dashT = 0.45; }
+      if (e.misc.dashT > 0){ e.misc.dashT -= dt; e.misc.dashing = true; }
+      else e.misc.dashing = false;
+      break;
 
-  if (e.type==="teleport"){
-    e.misc.tpCd = (e.misc.tpCd ?? 2.6) - dt;
-    if (e.misc.tpCd<=0){
-      e.misc.tpCd = 2.6;
-      const a = rand(0,Math.PI*2);
-      e.x = clamp(player.x + Math.cos(a)*190, 20, canvas.width-20);
-      e.y = clamp(player.y + Math.sin(a)*130, 20, canvas.height-20);
-      spawnField("eclipse", e.x, e.y, 100, 0.22, 8, {});
-    }
-  }
+    case "summoner":
+      e.misc.summonCd -= dt;
+      if (e.misc.summonCd <= 0){
+        e.misc.summonCd = 3.2;
+        spawnEnemyNear(e.x,e.y);
+        spawnEnemyNear(e.x,e.y);
+        showToast("소환!", 0.7);
+      }
+      break;
 
-  if (e.type==="vortex"){
-    e.misc.fieldCd = (e.misc.fieldCd ?? 2.6) - dt;
-    if (e.misc.fieldCd<=0){
-      e.misc.fieldCd = 2.6;
-      spawnField("storm", e.x, e.y, 130, 2.2, 10, {});
-    }
-  }
+    case "bomber":
+      if (dist2(e.x,e.y,player.x,player.y) < 95*95){
+        e.misc.fuse += dt;
+        if (e.misc.fuse > 1.2){
+          if (state.ifrT <= 0) state.hurtPlayer(32);
+          e.hp = 0;
+          showToast("자폭!", 0.7);
+        }
+      } else {
+        e.misc.fuse = Math.max(0, e.misc.fuse - dt*0.6);
+      }
+      break;
 
-  if (e.type==="leaker"){
-    e.misc.puddleCd = (e.misc.puddleCd ?? 2.0) - dt;
-    if (e.misc.puddleCd<=0){
-      e.misc.puddleCd = 2.0;
-      spawnField("acid", e.x, e.y, 120, 2.2, 0, {});
-    }
-  }
+    case "waver":
+      e.misc.waveCd -= dt;
+      if (e.misc.waveCd <= 0){
+        e.misc.waveCd = 2.6;
+        spawnField("wave", e.x, e.y, 220, 0.35, 14, {});
+        if (dist2(e.x,e.y,player.x,player.y) < 220*220 && state.ifrT<=0) state.hurtPlayer(14);
+        showToast("충격파!", 0.6);
+      }
+      break;
 
-  if (e.type==="shielder"){
-    e.misc.shield = Math.max(0, (e.misc.shield ?? 0) - dt*6);
+    case "sniper":
+      e.misc.shotCd -= dt;
+      if (e.misc.shotCd <= 0){
+        e.misc.shotCd = 1.8;
+        const sp = 360;
+        bullets.push({
+          x:e.x, y:e.y,
+          vx:toP.x*sp, vy:toP.y*sp,
+          r:5, dmg:14, tags:new Set(["enemyshot"]),
+          pierce:0, hitSet:new Set(), life:3.0
+        });
+      }
+      break;
+
+    case "teleport":
+      e.misc.tpCd -= dt;
+      if (e.misc.tpCd <= 0){
+        e.misc.tpCd = 3.0;
+        const ang = rand(0,Math.PI*2);
+        const rr = rand(130, 220);
+        const w=W(), h=H();
+        e.x = clamp(player.x + Math.cos(ang)*rr, 20, w-20);
+        e.y = clamp(player.y + Math.sin(ang)*rr, 20, h-20);
+        showToast("텔레포트!", 0.6);
+      }
+      break;
+
+    case "vortex":
+      e.misc.fieldCd -= dt;
+      if (e.misc.fieldCd <= 0){
+        e.misc.fieldCd = 3.0;
+        spawnField("eclipse", e.x, e.y, 115, 1.6, 9, {});
+      }
+      break;
+
+    case "leaker":
+      e.misc.puddleCd -= dt;
+      if (e.misc.puddleCd <= 0){
+        e.misc.puddleCd = 2.4;
+        spawnField("acid", e.x, e.y, 95, 3.2, 8, {});
+      }
+      break;
   }
 }
 
 /* =========================
-   폭탄 장비: 일반몹 처치시 폭발(엘리트 즉사 금지)
+   20) 업데이트
 ========================= */
-function tryBombOnKill(x,y){
-  const lv = gearLevel("bombs");
-  if (lv <= 0) return;
-  const p = 0.18 + 0.05*Math.min(6,lv);
-  if (!chance(p)) return;
-
-  const radius = 110 + 8*lv;
-  const dmg = 18 + 4*lv + state.atk*0.25;
-
-  applyExplosion(x,y,radius,dmg); // 내부에서 엘리트 즉사 금지 처리
-  showToast("폭탄!", 0.5);
-}
-
-/* =========================
-   업데이트(메인)
-========================= */
-let spawnT = 0;
-let eliteMinute = 0;
-
 function update(dt){
   if (!state.running || state.paused) return;
 
   state.elapsed += dt;
   state.time -= dt;
 
-  // 스테이지 전환(1~5분)
-  const newStage = clamp(1 + Math.floor(state.elapsed/60), 1, 5);
+  const newStage = clamp(Math.floor(state.elapsed/60)+1, 1, 5);
   if (newStage !== state.stage){
     state.stage = newStage;
-    rollStageModifier();
-    // 스테이지 바뀌면 엘리트 세트 갱신
     pickStageElites();
+    rollStageModifier();
+    spawnStageElite();
   }
 
-  // 종료
   if (state.time <= 0){
     state.time = 0;
-    endGame(true);
+    endGame(false);
     return;
   }
 
-  // 상태 타이머
-  state.hurtFlash = Math.max(0, state.hurtFlash - dt);
+  // 후반: 엘리트 추가 등장(가끔)
+  if (state.elapsed > 60 && Math.random() < (0.0011 + 0.00035*(state.stage-1))){
+    spawnStageElite();
+  }
+
+  // 모디파이어 heal
+  if (state.stageMod === "heal"){
+    state._healCd -= dt;
+    if (state._healCd <= 0){
+      state._healCd = 4.0;
+      state.hp = Math.min(state.maxHp, state.hp + 6);
+    }
+  }
+
+  state.hurtFlash = Math.max(0, state.hurtFlash - dt*3.2);
   state.ifrT = Math.max(0, state.ifrT - dt);
-  state.freezeT = Math.max(0, state.freezeT - dt);
+  if (state.freezeT > 0) state.freezeT -= dt;
 
-  // 플레이어 이동
-  let dx=0, dy=0;
-  if (keys.has("arrowleft") || keys.has("a")) dx -= 1;
-  if (keys.has("arrowright") || keys.has("d")) dx += 1;
-  if (keys.has("arrowup") || keys.has("w")) dy -= 1;
-  if (keys.has("arrowdown") || keys.has("s")) dy += 1;
-  if (dx||dy){
-    const v = norm(dx,dy);
-    player.x += v.x * state.ms * dt;
-    player.y += v.y * state.ms * dt;
-    player.x = clamp(player.x, 14, canvas.width-14);
-    player.y = clamp(player.y, 14, canvas.height-14);
+  // 이동 입력: 키보드 + 조이스틱 합산
+  let mx=(keys.has("a")||keys.has("arrowleft")?-1:0)+(keys.has("d")||keys.has("arrowright")?1:0);
+  let my=(keys.has("w")||keys.has("arrowup")?-1:0)+(keys.has("s")||keys.has("arrowdown")?1:0);
+
+  // 모바일 조이스틱 반영
+  if (isTouchDevice){
+    mx += joy.dx;
+    my += joy.dy;
   }
 
-  // ✅ 웨이브(쉬움 해결): 18초 주기 / 6초 강화
-  const t = state.elapsed / 300;
-  const minute = state.elapsed / 60;
-  const wavePeriod = 18;
-  const waveOn = (state.elapsed % wavePeriod) < 6;
-  const waveMul = waveOn ? (1.45 + 0.25*t) : 1.0;
-  const lateMul = (minute >= 4) ? 1.20 : 1.0;
-
-  // ✅ 스폰 커브 강화
-  const baseSpawn = 0.90 + t*2.35;
-  const spawnRate = baseSpawn * waveMul * lateMul;
-
-  spawnT += dt;
-  const interval = 1 / spawnRate;
-
-  while (spawnT > interval){
-    spawnT -= interval;
-    spawnEnemy();
-
-    const extraP = waveOn ? (0.34 + 0.10*t) : 0.20;
-    if (Math.random() < extraP) spawnEnemy();
-    if (minute >= 3 && Math.random() < (0.09 + 0.06*t)) spawnEnemy();
+  const mlen=Math.hypot(mx,my);
+  if (mlen > 0.001){
+    mx/=mlen; my/=mlen;
+    player.x += mx*state.ms*dt;
+    player.y += my*state.ms*dt;
   }
+  const w=W(), h=H();
+  player.x=clamp(player.x,10,w-10);
+  player.y=clamp(player.y,10,h-10);
 
-  if (waveOn && !state._waveToastShown){
-    state._waveToastShown = true;
-    showToast("웨이브!", 0.8);
-  }
-  if (!waveOn) state._waveToastShown = false;
+  // 스폰 난이도
+  const t = state.elapsed/300;
+  let spawnP = clamp(0.028 + t*0.016 + state.level*0.0011, 0, 0.050);
+  if (state.stageMod === "rage") spawnP *= 1.08;
+  if (Math.random() < spawnP) spawnEnemy();
 
-  // ✅ 엘리트: 매 분 1마리 + 웨이브 시작시 1마리(너무 많지 않게)
-  const m = Math.floor(state.elapsed/60);
-  if (m > eliteMinute && m<=5){
-    eliteMinute = m;
-    spawnStageElite();
-  }
-  if (waveOn && state.elapsed <= 300 && !state._waveEliteSpawned){
-    state._waveEliteSpawned = true;
-    // 웨이브 보스 느낌: 엘리트 한 마리 추가(문구 포함)
-    spawnStageElite();
-  }
-  if (!waveOn) state._waveEliteSpawned = false;
-
-  // 공격
-  shootSystem(dt);          // ✅ 닌자도 호출 → 시너지 탄환 발사 버그 수정
+  // 전투
   ninjaMeleeTick(dt);
+  shoot(dt);
 
-  // 장비 지속
-  updateGearAuras(dt);
+  // 적 업데이트
+  for (const e of enemies){
+    if (e.burnT > 0){ e.hp -= e.burnDps*dt; e.burnT -= dt; }
+    if (e.slowT > 0) e.slowT -= dt;
+    if (e.fearT > 0) e.fearT -= dt;
+    if (e.misc.inSmoke > 0) e.misc.inSmoke -= dt;
+
+    if (state.freezeT > 0) continue;
+
+    if (e.elite) eliteTick(e, dt);
+
+    const {vx,vy} = computeEnemyVelocity(e, dt);
+    let spd = e.spd;
+    if (e.slowT > 0) spd *= 0.45;
+    if (state.stageMod === "slow") spd *= 0.92;
+    if (e.elite && e.type==="charger" && e.misc.dashing) spd *= 3.1;
+
+    e.x += vx*spd*dt;
+    e.y += vy*spd*dt;
+
+    // 접촉 피해 (연막 안에서는 약하게)
+    if (dist2(e.x,e.y,player.x,player.y) < (e.r + player.r)**2){
+      if (state.ifrT <= 0){
+        const dmg = (e.misc.inSmoke > 0) ? 6 : 18;
+        state.hurtPlayer(dmg);
+      }
+    }
+  }
 
   // 탄환 업데이트/충돌
   for (let i=bullets.length-1;i>=0;i--){
     const b = bullets[i];
     b.life -= dt;
-    if (b.life<=0){ bullets.splice(i,1); continue; }
-    b.x += b.vx*dt;
-    b.y += b.vy*dt;
+    if (b.life <= 0){ bullets.splice(i,1); continue; }
 
-    if (b.x<-30||b.x>canvas.width+30||b.y<-30||b.y>canvas.height+30){
-      bullets.splice(i,1); continue;
-    }
+    b.x += b.vx*dt; b.y += b.vy*dt;
+    if (b.x < -60 || b.x > w+60 || b.y < -60 || b.y > h+60){ bullets.splice(i,1); continue; }
 
-    for (const e of enemies){
-      if (b.pierce < 0) break;
-      if (b.hitSet.has(e)) continue;
-      if (dist2(b.x,b.y,e.x,e.y) <= (b.r+e.r)*(b.r+e.r)){
-        b.hitSet.add(e);
-        // shielder: 보호막이 있으면 먼저 흡수
-        if (e.elite && e.type==="shielder" && (e.misc.shield ?? 0) > 0){
-          e.misc.shield -= b.dmg;
-          e.hitFlash = 0.08;
-        } else {
-          onHitEnemy(b,e);
-        }
-
-        b.pierce -= 1;
-        if (b.pierce < 0) break;
+    if (b.tags.has("enemyshot")){
+      if (dist2(b.x,b.y,player.x,player.y) < (b.r + player.r)**2){
+        if (state.ifrT <= 0) state.hurtPlayer(b.dmg);
+        bullets.splice(i,1);
       }
-    }
-  }
-
-  // 적 업데이트
-  for (let i=enemies.length-1;i>=0;i--){
-    const e = enemies[i];
-
-    // 상태
-    e.hitFlash = Math.max(0, e.hitFlash - dt);
-    e.burnT = Math.max(0, e.burnT - dt);
-    e.slowT = Math.max(0, e.slowT - dt);
-    e.fearT = Math.max(0, e.fearT - dt);
-    e.critFlash = Math.max(0, (e.critFlash ?? 0) - dt);
-
-    if (e.burnT > 0) e.hp -= e.burnDps * dt;
-
-    // 죽음 처리
-    if (e.hp <= 0){
-      // 점수/킬
-      state.kills++;
-      state.score += e.elite ? 120 : 10;
-
-      // 폭탄 장비: 일반몹 킬 폭발
-      if (!e.elite) tryBombOnKill(e.x,e.y);
-
-      // 분열자
-      if (e.elite && e.type==="splitter"){
-        for (let k=0;k<7;k++) spawnEnemyAt(e.x,e.y,{kind:"mini"});
-      }
-
-      // 보상
-      if (e.elite){
-        state.eliteKills++;
-        rewardEliteDeath(e.x,e.y);
-      } else {
-        spawnXp(e.x,e.y);
-        if (state.stageMod==="heal" && Math.random()<0.16) spawnItem(e.x,e.y,"heal");
-        // 소량 랜덤 아이템
-        if (Math.random() < (0.010 + (state.elapsed/300)*0.020)){
-          const rr = Math.random();
-          if (rr < 0.58) spawnItem(e.x,e.y,"heal");
-          else if (rr < 0.84) spawnItem(e.x,e.y,"freeze");
-          else spawnItem(e.x,e.y,"nuke");
-        }
-      }
-
-      enemies.splice(i,1);
       continue;
     }
 
-    // freeze면 이동 정지
-    if (state.freezeT > 0) continue;
+    for (let j=enemies.length-1;j>=0;j--){
+      const e = enemies[j];
+      if (dist2(b.x,b.y,e.x,e.y) < (b.r + e.r)**2){
+        if (b.hitSet.has(e)) continue;
+        b.hitSet.add(e);
 
-    // 이동
-    const slowMul = (e.slowT>0) ? 0.60 : 1.0;
-    const fearMul = (e.fearT>0) ? -1.0 : 1.0;
-    const spd = e.spd * slowMul;
+        if (e.elite && e.type==="shielder"){
+          e.misc.shield = e.misc.shield ?? 120;
+          const take = Math.min(e.misc.shield, b.dmg);
+          e.misc.shield -= take;
+          const rest = b.dmg - take;
+          if (rest > 0) onHit(e, {dmg:rest, tags:b.tags});
+          else applySynergyOnHit(e, b.tags);
+        } else {
+          onHit(e,b);
+        }
 
-    let vx=0, vy=0;
-    const toP = norm(player.x - e.x, player.y - e.y);
+        if (e.misc.prism > 0){
+          e.misc.prism -= 1;
+          const t = nearestEnemy();
+          if (t){
+            fireBulletTowards(t, state.atk*0.32, 560, [], 0, 4, 1.5);
+            fireBulletTowards(t, state.atk*0.32, 560, [], 0, 4, 1.5);
+          }
+        }
 
-    if (e.behavior==="normal"){
-      vx = toP.x; vy = toP.y;
-    } else if (e.behavior==="strafe"){
-      const side = (Math.sin(state.elapsed*0.9 + e.phase) > 0) ? 1 : -1;
-      vx = toP.x*0.75 + (-toP.y)*0.68*side;
-      vy = toP.y*0.75 + ( toP.x)*0.68*side;
-      const v = norm(vx,vy); vx=v.x; vy=v.y;
-    } else if (e.behavior==="swarm"){
-      e.jukeT -= dt;
-      if (e.jukeT<=0){
-        e.jukeT = rand(0.6,1.6);
-        e.jukeDir *= -1;
+        if (b.pierce > 0) b.pierce--;
+        else bullets.splice(i,1);
+        break;
       }
-      vx = toP.x + (-toP.y)*0.38*e.jukeDir;
-      vy = toP.y + ( toP.x)*0.38*e.jukeDir;
-      const v = norm(vx,vy); vx=v.x; vy=v.y;
-    } else if (e.behavior==="orbit"){
-      const d = dist(player.x,player.y,e.x,e.y);
-      const want = e.preferR;
-      const radial = clamp((d - want)/80, -1, 1);
-      vx = toP.x*radial + (-toP.y)*0.92;
-      vy = toP.y*radial + ( toP.x)*0.92;
-      const v = norm(vx,vy); vx=v.x; vy=v.y;
-    }
-
-    vx *= fearMul; vy *= fearMul;
-    e.x += vx*spd*dt;
-    e.y += vy*spd*dt;
-
-    // 엘리트 기믹
-    updateElite(dt,e);
-
-    // 접촉 피해
-    if (dist2(e.x,e.y,player.x,player.y) <= (e.r+player.r)*(e.r+player.r)){
-      hitPlayer(e.elite ? 14 : 9);
-      const v = norm(player.x - e.x, player.y - e.y);
-      player.x += v.x*18;
-      player.y += v.y*18;
-      player.x = clamp(player.x, 14, canvas.width-14);
-      player.y = clamp(player.y, 14, canvas.height-14);
     }
   }
 
-  // 필드/소환
-  updateFields(dt);
-  updateSummons(dt);
+  // 필드/소환/장비
+  tickFields(dt);
+  tickSummons(dt);
+  tickGear(dt);
 
-  // ✅ XP/아이템 자석(초반 답답함 해결)
-  const early = clamp(1.3 - (state.elapsed/40), 1.0, 1.3);
-  const pickupRadiusNow = state.pickupRadius + 10*early;
-  const pickupForceNow  = state.pickupForce  + 1700*early;
+  // 사망 처리
+  for (let i=enemies.length-1;i>=0;i--){
+    const e = enemies[i];
+    if (e.hp <= 0){
+      if (e.misc.curseBoom){
+        spawnField("blast", e.x, e.y, 85, 0.25, 16 + 4*e.misc.curseBoom, {});
+      }
+      if (e.elite && e.type==="splitter"){
+        for(let k=0;k<4;k++) spawnEnemyNear(e.x,e.y,{kind:"mini"});
+      }
 
-// ===== XP 자석 (고속 버전) =====
-for (let i=xpOrbs.length-1;i>=0;i--){
-  const o = xpOrbs[i];
-  const d2 = dist2(o.x,o.y,player.x,player.y);
+      spawnXp(e.x,e.y);
 
-  // 초반 부스트 (0~60초)
-  const early = clamp(1.6 - (state.elapsed/60), 1.0, 1.6);
+      const blv = gearLevel("bombs");
+      if (blv > 0 && Math.random() < (0.10 + 0.02*Math.min(10,blv))){
+        spawnField("blast", e.x, e.y, 75 + 4*blv, 0.25, 18 + 2*blv, {});
+      }
 
-  const pickupR = state.pickupRadius + 90*early;
-
-  if (d2 < pickupR*pickupR){
-    const v = norm(player.x - o.x, player.y - o.y);
-    const distNow = Math.max(20, Math.sqrt(d2));
-
-    // ✅ 기존보다 훨씬 강한 흡인
-    let pull = (state.pickupForce * early) / distNow;
-    pull = Math.min(pull, 140);
-
-    o.vx += v.x * pull * dt * 60;
-    o.vy += v.y * pull * dt * 60;
+      tryDropSupportItem(e.x,e.y);
+      enemies.splice(i,1);
+      state.kills++;
+    }
   }
 
-  // 감쇠 (덜 죽여서 속도 유지)
-  o.vx *= (1 - 1.8*dt);
-  o.vy *= (1 - 1.8*dt);
+  // XP 자석
+  for (let i=xpOrbs.length-1;i>=0;i--){
+    const o = xpOrbs[i];
+    const dx = player.x - o.x, dy = player.y - o.y;
+    const d2 = dx*dx + dy*dy;
+    const R = state.pickupRadius;
+    if (d2 < R*R){
+      const d = Math.sqrt(d2) || 0.0001;
+      const nx = dx/d, ny = dy/d;
+      const pull = state.pickupForce * (1 - d/R);
+      o.vx += nx*pull*dt; o.vy += ny*pull*dt;
+      const v = Math.hypot(o.vx,o.vy), vmax=900;
+      if (v>vmax){ o.vx=o.vx/v*vmax; o.vy=o.vy/v*vmax; }
+    }
+    o.x += o.vx*dt; o.y += o.vy*dt;
+    o.vx *= Math.pow(0.001, dt); o.vy *= Math.pow(0.001, dt);
 
-  // 속도 상한
-  const sp = Math.hypot(o.vx,o.vy);
-  const cap = 1100;
-  if (sp > cap){
-    o.vx = o.vx/sp*cap;
-    o.vy = o.vy/sp*cap;
+    if (d2 < 26*26){
+      gainXp(10);
+      xpOrbs.splice(i,1);
+    }
   }
 
-  o.x += o.vx*dt;
-  o.y += o.vy*dt;
-
-  if (d2 <= (player.r+10)*(player.r+10)){
-    gainXp(1);
-    xpOrbs.splice(i,1);
-  }
-}
-
-  // 아이템
+  // 아이템 자석/획득
   for (let i=items.length-1;i>=0;i--){
     const it = items[i];
-    it.t += dt;
-    const d2 = dist2(it.x,it.y,player.x,player.y);
-
-    if (d2 < pickupRadiusNow*pickupRadiusNow){
-      const v = norm(player.x - it.x, player.y - it.y);
-      const pull = (pickupForceNow*0.78) / Math.max(90, Math.sqrt(d2));
-      it.vx += v.x*pull*dt;
-      it.vy += v.y*pull*dt;
+    const dx = player.x - it.x, dy = player.y - it.y;
+    const d2 = dx*dx + dy*dy;
+    const R = Math.max(120, state.pickupRadius*0.85);
+    if (d2 < R*R){
+      const d = Math.sqrt(d2) || 0.0001;
+      const nx = dx/d, ny = dy/d;
+      const pull = 900*(1-d/R);
+      it.vx += nx*pull*dt; it.vy += ny*pull*dt;
+      const v = Math.hypot(it.vx,it.vy), vmax=820;
+      if (v>vmax){ it.vx=it.vx/v*vmax; it.vy=it.vy/v*vmax; }
     }
-    it.vx *= (1 - 2.2*dt);
-    it.vy *= (1 - 2.2*dt);
-    it.x += it.vx*dt;
-    it.y += it.vy*dt;
+    it.x += it.vx*dt; it.y += it.vy*dt;
+    it.vx *= Math.pow(0.001, dt); it.vy *= Math.pow(0.001, dt);
 
-    if (d2 <= (player.r+10)*(player.r+10)){
-      useItem(it.type);
+    if (d2 < 30*30){
+      if (it.type==="heal"){
+        const heal = Math.floor(state.maxHp*0.35);
+        state.hp = Math.min(state.maxHp, state.hp + heal);
+        showToast(`회복 +${heal}`, 1.1);
+      }
+      if (it.type==="freeze"){
+        state.freezeT = 3.0;
+        showToast("빙결!", 1.1);
+      }
+      if (it.type==="nuke"){
+        const n = enemies.length;
+        state.kills += n;
+        enemies.length = 0;
+        showToast(`폭탄! ${n}마리 제거`, 1.1);
+      }
       items.splice(i,1);
     }
+  }
+
+  if (state.hp <= 0){
+    state.hp = 0;
+    endGame(true);
   }
 }
 
 /* =========================
-   렌더 (Part3에서 시인성/장비 표현 더 강화)
+   21) 렌더: “장판 규칙” + “원소별 최소 미니멀 구분”
+   - 핵심: 장판은 대부분 stroke 중심
+   - XP는 항상 마지막에 렌더(최상단)
 ========================= */
-function render(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // 배경 그리드
+// 필드 kind별 스타일(테두리/채움/이중원/점선/스파크)
+const FIELD_STYLE = {
+  // 물 계열
+  smoke:   { mode:"dotted", stroke:"#ffffff", alpha:0.35, lw:2 },
+  storm:   { mode:"double", stroke:"#66ccff", alpha:0.35, lw:2 },
+  frost:   { mode:"stroke", stroke:"#66ccff", alpha:0.30, lw:2 },
+  oil:     { mode:"fill",   fill:"#222222", alpha:0.20, lw:0 },
+
+  // 불 계열
+  flare:     { mode:"stroke", stroke:"#ff8844", alpha:0.35, lw:2 },
+  firevortex: { mode:"double", stroke:"#ff8844", alpha:0.35, lw:2 },
+  ringfire:   { mode:"stroke", stroke:"#ff8844", alpha:0.30, lw:2 },
+  blast:      { mode:"fill", fill:"#ffd400", alpha:0.22, lw:0 }, // 즉발
+
+  // 전기 계열
+  spark:     { mode:"spark", stroke:"#ffd400", alpha:0.40, lw:2 },
+  lightning: { mode:"fill", fill:"#ffd400", alpha:0.20, lw:0 }, // 즉발
+  darkbolt:  { mode:"fill", fill:"#b388ff", alpha:0.18, lw:0 }, // 즉발(암전 낙뢰)
+
+  // 바람 계열
+  tornado: { mode:"double", stroke:"#88ffff", alpha:0.30, lw:2 },
+  gust:    { mode:"dotted", stroke:"#88ffff", alpha:0.30, lw:2 },
+
+  // 빛/암흑
+  eclipse: { mode:"stroke", stroke:"#b388ff", alpha:0.28, lw:3 },
+  acid:    { mode:"stroke", stroke:"#66ff66", alpha:0.28, lw:2 },
+  wave:    { mode:"stroke", stroke:"#66ccff", alpha:0.25, lw:2 },
+};
+
+function drawCircleStroke(x,y,r,style){
   ctx.save();
-  ctx.globalAlpha=0.08;
-  ctx.strokeStyle="#ffffff";
-  for(let x=0;x<canvas.width;x+=60){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
-  for(let y=0;y<canvas.height;y+=60){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+  ctx.globalAlpha = style.alpha ?? 0.35;
+  ctx.lineWidth = style.lw ?? 2;
+  ctx.strokeStyle = style.stroke ?? "#fff";
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
   ctx.restore();
-
-  // 필드
-  for (const f of fields){
-    const st = getFieldStyle(f.kind);
-    ctx.save();
-    ctx.globalAlpha = st.alpha;
-
-    if (st.type==="fill"){
-      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
-      ctx.fillStyle = st.color; ctx.fill();
-    } else if (st.type==="stroke"){
-      if (st.dash) ctx.setLineDash(st.dash);
-      ctx.lineWidth = st.line ?? 2;
-      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
-      ctx.strokeStyle = st.color; ctx.stroke();
-      ctx.setLineDash([]);
-    } else if (st.type==="double"){
-      ctx.lineWidth = st.line ?? 2;
-      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
-      ctx.strokeStyle = st.color; ctx.stroke();
-      ctx.globalAlpha *= 0.85;
-      ctx.beginPath(); ctx.arc(f.x,f.y,Math.max(8,f.r*0.72),0,Math.PI*2);
-      ctx.stroke();
-    } else if (st.type==="dots"){
-      const n = Math.floor(6 + f.r*0.08);
-      ctx.fillStyle = st.color;
-      for (let i=0;i<n;i++){
-        const a = Math.random()*Math.PI*2;
-        const rr = Math.random()*f.r;
-        const x = f.x + Math.cos(a)*rr;
-        const y = f.y + Math.sin(a)*rr;
-        ctx.globalAlpha = st.alpha * (0.35 + Math.random()*0.65);
-        ctx.beginPath(); ctx.arc(x,y, 1.5 + Math.random()*2.0, 0, Math.PI*2); ctx.fill();
-      }
-    } else if (st.type==="bolt"){
-      ctx.globalAlpha = st.alpha;
-      ctx.strokeStyle = st.color;
-      ctx.lineWidth = st.line ?? 3;
-      for (let k=0;k<2;k++){
-        const a = Math.random()*Math.PI*2;
-        const len = Math.min(70, f.r*0.9);
-        const sx = f.x + Math.cos(a)*len*0.1;
-        const sy = f.y + Math.sin(a)*len*0.1;
-        const ex = f.x + Math.cos(a)*len;
-        const ey = f.y + Math.sin(a)*len;
-        ctx.beginPath();
-        ctx.moveTo(sx,sy);
-        const steps = 6;
-        for (let i=1;i<steps;i++){
-          const tt = i/steps;
-          ctx.lineTo(sx + (ex-sx)*tt + rand(-8,8), sy + (ey-sy)*tt + rand(-8,8));
-        }
-        ctx.lineTo(ex,ey);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
+}
+function drawCircleFill(x,y,r,style){
+  ctx.save();
+  ctx.globalAlpha = style.alpha ?? 0.25;
+  ctx.fillStyle = style.fill ?? "#fff";
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawCircleDouble(x,y,r,style){
+  drawCircleStroke(x,y,r,style);
+  drawCircleStroke(x,y,Math.max(0,r-10),style);
+}
+function drawCircleDotted(x,y,r,style){
+  ctx.save();
+  ctx.globalAlpha = style.alpha ?? 0.35;
+  ctx.lineWidth = style.lw ?? 2;
+  ctx.strokeStyle = style.stroke ?? "#fff";
+  ctx.setLineDash([6,6]);
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+function drawSparkDots(x,y,r,style){
+  // 테두리 + 내부 점 몇 개(전기 느낌)
+  drawCircleStroke(x,y,r,style);
+  ctx.save();
+  ctx.globalAlpha = (style.alpha ?? 0.4) * 0.9;
+  ctx.fillStyle = style.stroke ?? "#ffd400";
+  for(let i=0;i<4;i++){
+    const a = rand(0,Math.PI*2);
+    const rr = rand(0,r*0.75);
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a)*rr, y + Math.sin(a)*rr, 2.2, 0, Math.PI*2);
+    ctx.fill();
   }
+  ctx.restore();
+}
 
-  // 아이템(Part3에서 더 또렷하게 업그레이드)
+function drawField(f){
+  const style = FIELD_STYLE[f.kind] ?? {mode:"stroke", stroke:"#fff", alpha:0.25, lw:2};
+  if (style.mode==="fill") return drawCircleFill(f.x,f.y,f.r,style);
+  if (style.mode==="double") return drawCircleDouble(f.x,f.y,f.r,style);
+  if (style.mode==="dotted") return drawCircleDotted(f.x,f.y,f.r,style);
+  if (style.mode==="spark") return drawSparkDots(f.x,f.y,f.r,style);
+  return drawCircleStroke(f.x,f.y,f.r,style);
+}
+
+function draw(){
+  const w=W(), h=H();
+  ctx.clearRect(0,0,w,h);
+
+  // 1) 필드(장판) 먼저 (대부분 stroke라 덜 덕지덕지)
+  for (const f of fields) drawField(f);
+
+  // 2) 아이템
   for (const it of items){
-    let stroke="#fff", fill="rgba(255,255,255,0.12)", icon="";
-    if (it.type==="heal"){ stroke="#66ff66"; fill="rgba(102,255,102,0.18)"; icon="+"; }
-    if (it.type==="freeze"){ stroke="#66ccff"; fill="rgba(102,204,255,0.18)"; icon="❄"; }
-    if (it.type==="nuke"){ stroke="#ffcc66"; fill="rgba(255,204,102,0.18)"; icon="☢"; }
-
-    ctx.save();
-    ctx.shadowColor = stroke;
-    ctx.shadowBlur = 14 + 4*Math.sin(it.t*6);
-
-    ctx.beginPath(); ctx.arc(it.x,it.y,it.r+2,0,Math.PI*2);
-    ctx.fillStyle = fill; ctx.fill();
-
-    ctx.shadowBlur = 0;
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = stroke; ctx.stroke();
-
-    ctx.fillStyle = stroke;
-    ctx.font = "bold 14px system-ui";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(icon, it.x, it.y+0.5);
-    ctx.restore();
+    ctx.beginPath(); ctx.arc(it.x,it.y,it.r,0,Math.PI*2);
+    if (it.type==="heal") ctx.fillStyle="#4cff4c";
+    if (it.type==="freeze") ctx.fillStyle="#4cc9ff";
+    if (it.type==="nuke") ctx.fillStyle="#ff4c4c";
+    ctx.fill();
   }
 
- // 3) 적(일반=세모, 엘리트=별)
-for (const e of enemies){
-  // 무지개 색(크리 플래시)
-  const rainbow = (e.critFlash ?? 0) > 0
-    ? `hsl(${((performance.now()*0.12)%360)},100%,65%)`
-    : null;
+  // 3) 소환물(미니멀 점)
+  for (const s of summons){
+    ctx.beginPath(); ctx.arc(s.x,s.y,6,0,Math.PI*2);
+    ctx.fillStyle = (s.kind==="plant")?"#88ff88":(s.kind==="shadow")?"#b388ff":"#ffd400";
+    ctx.fill();
+  }
 
-  if (e.elite){
-    drawStar(e.x, e.y, e.r);
-
-    // 우선순위: 크리 무지개 > 피격 흰색 > 타입별 색
-    let col = "#ffcc66";
-    if (rainbow) col = rainbow;
-    else if ((e.hitFlash ?? 0) > 0) col = "#ffffff";
-    else {
+  // 4) 적: 일반=세모, 엘리트=별
+  for (const e of enemies){
+    if (e.elite){
+      drawStar(e.x, e.y, e.r);
+      let col = "#ffcc66";
       if (e.type==="bomber") col="#ff6666";
       if (e.type==="sniper") col="#66ccff";
       if (e.type==="teleport") col="#cc66ff";
       if (e.type==="shielder") col="#66ffcc";
+      ctx.fillStyle = col;
+      ctx.fill();
+
+      if (e.type==="shielder"){
+        const sh = e.misc.shield ?? 0;
+        if (sh > 0){
+          ctx.beginPath();
+          ctx.arc(e.x,e.y,e.r+6,0,Math.PI*2);
+          ctx.strokeStyle="rgba(100,255,220,.75)";
+          ctx.stroke();
+        }
+      }
+    } else {
+      drawTriangle(e.x, e.y, e.r);
+      if (e.fearT > 0) ctx.fillStyle="purple";
+      else if (e.burnT > 0) ctx.fillStyle="orange";
+      else if (e.slowT > 0) ctx.fillStyle="skyblue";
+      else ctx.fillStyle="red";
+      ctx.fill();
     }
-
-    ctx.fillStyle = col;
-    ctx.fill();
-
-    // (선택) 외곽선 약간
-    ctx.save();
-    ctx.globalAlpha = 0.30;
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = col;
-    ctx.stroke();
-    ctx.restore();
-
-  } else {
-    drawTriangle(e.x, e.y, e.r);
-
-    let col = "red";
-    if (rainbow) col = rainbow;                // ✅ 크리 무지개 최우선
-    else if ((e.hitFlash ?? 0) > 0) col="#ffffff";
-    else if (e.fearT>0) col="#cc66ff";
-    else if (e.burnT>0) col="#ff8844";
-    else if (e.slowT>0) col="#55ccff";
-
-    ctx.fillStyle = col;
-    ctx.fill();
   }
-}
 
-
-  // 탄환
+  // 5) 탄환
   for (const b of bullets){
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    let col="#ddd";
-    if (b.tags.has("water")) col="#55ccff";
-    else if (b.tags.has("fire")) col="#ff8844";
-    else if (b.tags.has("electric")) col="#ffd400";
-    else if (b.tags.has("wind")) col="#88ffff";
-    else if (b.tags.has("dark")) col="#cc66ff";
-    else if (b.tags.has("light")) col="#ffffff";
-    ctx.fillStyle=col;
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.fillStyle = b.tags.has("enemyshot") ? "#66ccff" : (b.r>=8 ? "#ffd400" : "#ddd");
     ctx.fill();
   }
 
-  // 소환
-  for (const s of summons){
-    ctx.save();
-    ctx.globalAlpha=0.8;
-    ctx.beginPath();
-    ctx.arc(s.x,s.y, 6, 0, Math.PI*2);
-    ctx.strokeStyle = (s.kind==="plant") ? "#66ff66" : "#ffffff";
-    ctx.stroke();
-    ctx.restore();
+  // 6) 플레이어
+  ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2);
+  ctx.fillStyle="white"; ctx.fill();
+
+  // 7) 닌자 링(미니멀 표시)
+  if (state.character === "ninja"){
+    const range = 52 + Math.min(44, state.level*1.2);
+    drawCircleStroke(player.x, player.y, range, {stroke:"#ffffff", alpha:0.25, lw:2});
+    const a = state.ninjaBladeAngle;
+    const x1 = player.x + Math.cos(a) * range;
+    const y1 = player.y + Math.sin(a) * range;
+    const x2 = player.x + Math.cos(a + Math.PI) * range;
+    const y2 = player.y + Math.sin(a + Math.PI) * range;
+    ctx.beginPath(); ctx.arc(x1,y1,4.5,0,Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
+    ctx.beginPath(); ctx.arc(x2,y2,4.5,0,Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
   }
 
-  // 플레이어
-  ctx.beginPath();
-  ctx.arc(player.x,player.y,player.r,0,Math.PI*2);
-  ctx.fillStyle="white";
-  ctx.fill();
-
-  // 닌자 링
-  if (state.character==="ninja"){
-    const range = state.ninjaRangeBase + Math.min(56, state.level*state.ninjaRangeScale);
-    ctx.save();
-    ctx.globalAlpha=0.22;
-    ctx.beginPath();
-    ctx.arc(player.x,player.y,range,0,Math.PI*2);
-    ctx.strokeStyle="#ffffff";
-    ctx.stroke();
-    ctx.restore();
-  
-
-  // 칼날 점 2개(회전 칼날 시인성)
-  const a = state.ninjaBladeAngle;
-  const x1 = player.x + Math.cos(a)*range, y1 = player.y + Math.sin(a)*range;
-  const x2 = player.x + Math.cos(a+Math.PI)*range, y2 = player.y + Math.sin(a+Math.PI)*range;
-  ctx.beginPath(); ctx.arc(x1,y1,4,0,Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
-  ctx.beginPath(); ctx.arc(x2,y2,4,0,Math.PI*2); ctx.fill();
-}
-
-
-  // 피격 플래시
-  if (state.hurtFlash>0){
-    ctx.save();
-    ctx.globalAlpha = Math.min(0.35, state.hurtFlash*2.6);
-    ctx.fillStyle="#ffffff";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.restore();
+  // 8) 피격 플래시
+  if (state.hurtFlash > 0){
+    ctx.fillStyle = `rgba(255,0,0,${0.28*state.hurtFlash})`;
+    ctx.fillRect(0,0,w,h);
   }
 
-  // XP (항상 위)
+  // ✅ 9) XP는 “항상 최상단”(마지막에 그림)
   for (const o of xpOrbs){
-    ctx.beginPath();
-    ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
+    ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
     ctx.fillStyle="lime";
     ctx.fill();
   }
+
+  // HUD
+  document.getElementById("hud").innerHTML =
+    `❤️ HP ${Math.floor(state.hp)}/${state.maxHp} ${state.shieldCharges>0?`(🛡${state.shieldCharges})`:""}<br>`+
+    `⏱ ${state.time.toFixed(1)}초 · 스테이지 ${state.stage}/5 · 모드 ${state.stageMod ?? "-"}<br>`+
+    `☠ 처치 ${state.kills}<br>`+
+    `📈 Lv.${state.level} · XP ${state.xp}/${state.xpNeed}<br>`+
+    `🧬 대기 원소 ${state.pendingEl?KR_EL[state.pendingEl]:"-"}<br>`+
+    `✨ 시너지 ${summarizeSynergies()}<br>`+
+    `🧩 장비 ${summarizeGears()}`;
 }
 
 /* =========================
-   resetAndStart를 실제 초기화로 확장
+   22) 루프
 ========================= */
-const _resetAndStart_part1 = resetAndStart;
-resetAndStart = function(){
-  _resetAndStart_part1();
-  // 초기 세팅
-  eliteMinute=0;
-  spawnT=0;
-  pickStageElites();
-  rollStageModifier();
-  showToast("준비 완료", 0.7);
-};
-
-/* =========================
-   메인 루프 (Part1의 stub 루프 대체)
-========================= */
-let last = performance.now();
-function loop(now){
-  const dt = Math.min(0.033, (now-last)/1000);
-  last = now;
-
-  if (state.running){
-    update(dt);
-    render();
-    updateHud();
-  }
+let last=0;
+function loop(t){
+  const dt=Math.min(0.033, (t-last)/1000); // 모바일 안정
+  last=t;
+  update(dt);
+  draw();
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
 /* =========================
-   0) 시너지 "완성된 것만" 발사 규칙 + 선택 로직 보정
-   - 시너지Stacks는 "완성된 쌍"만 저장한다고 가정
-   - pendingEl은 "대기"만 (단독으론 시너지 아님)
-   - (6) "시너지 탄환이 통합되어 나가는 느낌" → Part2에서 k별로 이미 분리 발사
-   - 여기선 levelUp 선택 풀에서 "완성 전/후" 흐름이 자연스럽게 되게 개선
+   23) 시작/리셋/게임오버
 ========================= */
+document.getElementById("pickRanged").onclick = () => startGame("ranged");
+document.getElementById("pickNinja").onclick  = () => startGame("ninja");
 
-// labelChoice / KR_EL / KR_UPG / GEAR 등은 Part1에 있음
+function resetGame(){
+  state.running=false;
+  state.paused=false;
 
-// ✅ 레벨업 선택 품질 개선: (너무 쉬워짐 방지)
-// - 초반엔 스탯이 더 자주, 중후반엔 시너지/장비 비중↑
-// - 같은 장비/같은 원소가 연속으로 너무 안 뜨는 현상 완화
-const _openLevelUp_part1 = openLevelUp;
-openLevelUp = function(){
-  // Part1의 기본 UI 생성 루틴을 사용하되, pool 구성만 여기서 override
-  state.paused = true;
-  levelupEl.style.display = "flex";
-  choicesEl.innerHTML = "";
+  state.time=300;
+  state.elapsed=0;
+  state.stage=1;
+  state.stageMod=null;
 
-  const t = state.elapsed/300;
-  const minute = state.elapsed/60;
+  state.kills=0;
+  state.level=1;
+  state.xp=0;
+  state.xpNeed=10;
 
-  // 스탯풀
-  const statPool = ["atk","hp","as","ms","mag","crit","vamp"];
-
-  // gear/element 등장 확률 커브
-  const gearChance =
-    (state.stageMod==="gear") ? 0.85 :
-    (minute < 1.0 ? 0.35 : minute < 3.0 ? 0.55 : 0.70);
-
-  const elChance =
-    (state.pendingEl ? 0.90 : 0.60) + (minute>=3 ? 0.10 : 0);
-
-  // pool 구성
-  const pool = [];
-  // 초반: 생존/기본스탯 비중↑, 후반: 공격/시너지 비중↑
-  const statWeight = (minute < 1.0) ? 7 : (minute < 3.0 ? 5 : 4);
-  for (let i=0;i<statWeight;i++){
-    pool.push(statPool[Math.floor(Math.random()*statPool.length)]);
+  if (state.character==="ranged"){
+    state.maxHp=100;
+    state.ms=230;
+    state.atk=12;
+    state.as=3.0;
+  } else {
+    state.maxHp=150;  // 닌자 조금 낮춤(사기 방지)
+    state.ms=205;
+    state.atk=11;
+    state.as=3.0;
   }
+  state.hp=state.maxHp;
 
-  // gear
-  if (Math.random() < gearChance){
-    const ids = Object.keys(GEAR);
-    pool.push("gear:"+ids[Math.floor(Math.random()*ids.length)]);
-    if (Math.random() < 0.25) pool.push("gear:"+ids[Math.floor(Math.random()*ids.length)]);
-  }
+  state.pickupRadius=170;
+  state.pickupForce=1200;
 
-  // element
-  if (Math.random() < elChance){
-    const els = ["water","fire","electric","wind","light","dark"];
-    let chosen;
+  state.hurtFlash=0;
+  state.ifrT=0;
+  state.freezeT=0;
 
-    // 대기원소 있을 때: 1) 같은 원소(모노 완성) 또는 2) 다른 원소(시너지 완성)
-    if (state.pendingEl && Math.random()<0.35) chosen = state.pendingEl;
-    else if (state.pendingEl && Math.random()<0.70){
-      const others = els.filter(e=>e!==state.pendingEl);
-      chosen = others[Math.floor(Math.random()*others.length)];
-    } else {
-      chosen = els[Math.floor(Math.random()*els.length)];
-    }
-    pool.push("el:"+chosen);
-  }
+  state.pendingEl=null;
+  state.synergyStacks = new Map();
+  state.gearLv = new Map();
 
-  // ✅ 3개 뽑기 (원소 최대 1개)
-  const tmp = pool.slice();
-  const picks = [];
-  while (picks.length < 3 && tmp.length){
-    const idx = Math.floor(Math.random()*tmp.length);
-    const v = tmp.splice(idx,1)[0];
-    if (v.startsWith("el:") && picks.some(x=>x.startsWith("el:"))) continue;
-    picks.push(v);
-  }
+  state.shieldCharges=0;
+  state.shieldRegenT=0;
+  state._bhCd=0;
+  state._healCd=0;
 
-  for (const p of picks){
-    const btn = document.createElement("button");
-    btn.textContent = labelChoice(p);
-    btn.onclick = () => pickUpgrade(p);
-    choicesEl.appendChild(btn);
-  }
+  const w=W(), h=H();
+  player.x=w/2; player.y=h/2;
 
-  state.lvCursor = 0;
-  highlightChoice();
+  enemies.length=0; bullets.length=0; xpOrbs.length=0; items.length=0; fields.length=0; summons.length=0;
 
-  const pending = state.pendingEl ? `대기 원소: ${KR_EL[state.pendingEl]}` : `대기 원소: -`;
-  levelHint.textContent =
-    `${pending} · 시너지 ${summarizeSynergies()} · 장비 ${summarizeGears()}`;
+  // 초반 테스트용 몹
+  for(let i=0;i<5;i++) spawnEnemy();
+}
+
+function startGame(charId){
+  state.nickname = (document.getElementById("nameInput").value || "").trim() || "Player";
+  state.character = charId;
+  document.getElementById("start").style.display="none";
+  resetGame();
+  state.running = true;
+  pickStageElites();
+  rollStageModifier();
+  showToast(`시작! (${charId==="ranged"?"원거리":"닌자"})`, 1.0);
+}
+
+const gameoverEl = document.getElementById("gameover");
+document.getElementById("retryBtn").onclick = () => {
+  gameoverEl.style.display="none";
+  document.getElementById("start").style.display="flex";
 };
 
-// ✅ 업그레이드 적용 확장(crit/vamp 추가)
-const _pickUpgrade_part1 = pickUpgrade;
-pickUpgrade = function(p){
-  if (p==="crit") state.crit = Math.min(0.35, state.crit + 0.03);
-  if (p==="vamp") state.vamp = Math.min(0.10, state.vamp + 0.01);
-
-  // 나머지는 Part1의 기존 처리 유지
-  _pickUpgrade_part1(p);
+document.getElementById("copyBtn").onclick = async () => {
+  const payload = buildRunPayload();
+  try{
+    await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+    showToast("복사됨!", 1.0);
+  }catch{
+    alert(JSON.stringify(payload, null, 2));
+  }
 };
 
-/* =========================
-   1) "아이템 시인성" 개선 (요구 3)
-   - Part2에서 이미 glow+아이콘 적용했음
-   - 여기선: 화면 가장자리에도 잘 보이게 "비콘 링" + "오프스크린 화살표"
-========================= */
-function drawOffscreenIndicator(x,y, color, text){
-  const pad = 18;
-  const cx = clamp(x, pad, canvas.width-pad);
-  const cy = clamp(y, pad, canvas.height-pad);
-  const off = (cx!==x) || (cy!==y);
-  if (!off) return;
+function endGame(dead){
+  state.running=false;
+  document.getElementById("goTitle").textContent = dead ? "사망" : "5분 생존 성공";
 
-  ctx.save();
-  ctx.globalAlpha = 0.85;
-  ctx.fillStyle = color;
-  ctx.strokeStyle = color;
+  const payload = buildRunPayload();
+  document.getElementById("goBody").textContent =
+`닉네임: ${payload.nickname}
+캐릭터: ${payload.character}
+처치: ${payload.kills}
+생존: ${payload.cleared}
+레벨: ${payload.level}
+시너지: ${payload.synergies.length ? payload.synergies.join(", ") : "-"}
+장비: ${payload.gears.length ? payload.gears.join(", ") : "-"}`;
 
-  // 방향 화살표
-  const ang = Math.atan2(y - canvas.height/2, x - canvas.width/2);
-  const ax = cx, ay = cy;
-  ctx.beginPath();
-  ctx.arc(ax,ay, 10, 0, Math.PI*2);
-  ctx.stroke();
+  gameoverEl.style.display="flex";
+  // submitRun(payload); // Firebase 붙일 때 여기 연결
+}
 
-  ctx.beginPath();
-  ctx.moveTo(ax,ay);
-  ctx.lineTo(ax + Math.cos(ang)*18, ay + Math.sin(ang)*18);
-  ctx.stroke();
-
-  ctx.font = "bold 12px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillText(text, ax, ay+12);
-  ctx.restore();
+function buildRunPayload(){
+  const synergies = [];
+  for (const [k,lv] of state.synergyStacks.entries()) synergies.push(`${k}:${lv}`);
+  const gears = [];
+  for (const [k,lv] of state.gearLv.entries()) gears.push(`${k}:${lv}`);
+  return {
+    nickname: state.nickname,
+    character: state.character,
+    kills: state.kills,
+    cleared: (state.time <= 0),
+    level: state.level,
+    timestamp: Date.now(),
+    synergies,
+    gears,
+    version: "vFinal-mobile-minimal",
+  };
 }
 
 /* =========================
-   2) "장비가 동작 중인지" 시인성 강화 (요구 4)
-   - thorns: 고정 링(초록) + 틱시 미세 펄스
-   - saw: 드론/톱날 점 2~4개가 플레이어 주위 회전
-   - blackhole: 흡인 중이면 라디얼 라인
-   - shield: 플레이어 주변 얇은 보호막 링
+   24) 보조: 2분 이후 템포
 ========================= */
-let _visT = 0;
-function renderGearVFX(dt){
-  _visT += dt;
-
-  // shield 링
-  if (state.shieldCharges > 0){
-    ctx.save();
-    ctx.globalAlpha = 0.18 + 0.06*Math.sin(_visT*6);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#66ffcc";
-    ctx.beginPath();
-    ctx.arc(player.x,player.y, player.r+10, 0, Math.PI*2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // thorns 링
-  const th = gearLevel("thorns");
-  if (th>0){
-    const r = 46 + th*6;
-    ctx.save();
-    ctx.globalAlpha = 0.10 + 0.04*Math.sin(_visT*5);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#66ff66";
-    ctx.beginPath();
-    ctx.arc(player.x,player.y, r, 0, Math.PI*2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // saw 드론 점(회전)
-  const sw = gearLevel("saw");
-  if (sw>0){
-    const r = 76 + sw*8;
-    const n = clamp(2 + Math.floor(sw/2), 2, 4);
-    ctx.save();
-    ctx.globalAlpha = 0.85;
-    ctx.fillStyle = "#ddd";
-    for(let i=0;i<n;i++){
-      const a = _visT*3.2 + i*(Math.PI*2/n);
-      const x = player.x + Math.cos(a)*r;
-      const y = player.y + Math.sin(a)*r;
-      ctx.beginPath();
-      ctx.arc(x,y, 4, 0, Math.PI*2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // blackhole 흡인 라인 (eclipse meta.pull이 있는 경우)
-  const bh = gearLevel("blackhole");
-  if (bh>0){
-    for (const f of fields){
-      if (f.kind!=="eclipse") continue;
-      const pull = f.meta.pull ?? 0;
-      if (!pull) continue;
-
-      ctx.save();
-      ctx.globalAlpha = 0.10;
-      ctx.strokeStyle = "#cc66ff";
-      ctx.lineWidth = 1;
-      // 적→필드 중심으로 얇은 라인 몇 개만
-      let cnt=0;
-      for (const e of enemies){
-        if (cnt>=8) break;
-        if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-          ctx.beginPath();
-          ctx.moveTo(e.x,e.y);
-          ctx.lineTo(f.x,f.y);
-          ctx.stroke();
-          cnt++;
-        }
-      }
-      ctx.restore();
-      break;
-    }
-  }
-}
-
-/* =========================
-   3) 난이도/긴장감 추가 보강 (요구 1)
-   - Part2에서 웨이브 기반 강화했음
-   - 여기선: 시간에 따라 플레이어가 "완만하게 압박" 받도록
-     (A) 적 탄성(속도) 추가
-     (B) 웨이브 동안 적 밀집시 데미지 소폭 증가
-========================= */
-function difficultyTick(dt){
-  // 4분 이후부터 접촉 피해 미세 증가(너무 쉬움 방지)
-  const minute = state.elapsed/60;
-  state._contactBonus = (minute >= 4) ? 2 : (minute >= 3 ? 1 : 0);
-
-  // 자석이 너무 강해져서 후반이 쉬워지지 않게: mag 업그레이드가 없으면 후반엔 early boost 없음
-  // (Part2에서 early=1-(elapsed/60)로 이미 1분 이후 사라짐)
-}
-
-/* =========================
-   4) 엘리트 등장 문구는 Part2에서 toast로 이미 처리 (요구 4)
-   - 여기선 HUD에 "마지막 엘리트" 표시 추가
-========================= */
-state.lastEliteName = "";
-const _spawnStageElite_part2 = spawnStageElite;
-spawnStageElite = function(){
-  // Part2 함수 호출 전에 toast가 이미 있음
-  _spawnStageElite_part2();
-  // 가장 마지막에 스폰된 엘리트를 찾아서 저장
-  const e = enemies[enemies.length-1];
-  if (e && e.elite) state.lastEliteName = e.name || e.type;
-};
-
-// HUD 확장
-const _updateHud_part1 = updateHud;
-updateHud = function(){
-  const mm = String(Math.floor(state.time/60)).padStart(1,"0");
-  const ss = String(Math.floor(state.time%60)).padStart(2,"0");
-  const pending = state.pendingEl ? KR_EL[state.pendingEl] : "-";
-
-  hud.innerHTML =
-    `⏱️ ${mm}:${ss} · 스테이지 ${state.stage} <span style="opacity:.7">(${state.stageMod ?? "-"})</span>` +
-    `<br/>레벨 ${state.level} · XP ${state.xp}/${state.xpNeed}` +
-    `<br/>HP ${Math.max(0,Math.floor(state.hp))}/${state.maxHp}` +
-    `<br/>킬 ${state.kills} · 정예 ${state.eliteKills} · 점수 ${state.score}` +
-    `<br/>대기 원소: ${pending}` +
-    `<br/>보호막: ${state.shieldCharges}` +
-    `<br/><span style="opacity:.75">최근 정예: ${state.lastEliteName || "-"}</span>`;
-};
-
-/* =========================
-   5) 렌더 후처리: 아이템 비콘 + 오프스크린 표시 + 장비 VFX
-   - Part2의 render()를 감싸서 추가 드로잉
-========================= */
-const _render_part2 = render;
-render = function(){
-  _render_part2();
-
-  // 아이템 비콘(더 눈에 띄게)
-  for (const it of items){
-    let col="#fff", label="";
-    if (it.type==="heal"){ col="#66ff66"; label="HEAL"; }
-    if (it.type==="freeze"){ col="#66ccff"; label="FREEZE"; }
-    if (it.type==="nuke"){ col="#ffcc66"; label="NUKE"; }
-
-    // 비콘 링
-    ctx.save();
-    ctx.globalAlpha = 0.12 + 0.08*Math.sin((it.t||0)*6);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = col;
-    ctx.beginPath();
-    ctx.arc(it.x,it.y, it.r+10 + 6*Math.sin((it.t||0)*4), 0, Math.PI*2);
-    ctx.stroke();
-    ctx.restore();
-
-    // 오프스크린 화살표
-    drawOffscreenIndicator(it.x,it.y,col,label);
-  }
-
-  // 장비 VFX (dt 추정 불가하니 프레임 기반으로)
-  // 여기선 dt 없이도 돌아가게 1/60 가정
-  renderGearVFX(1/60);
-};
-
-/* =========================
-   6) update()에 난이도 tick / 아이템-장비 가시성 보조
-   - Part2 update를 감싸서 호출
-========================= */
-const _update_part2 = update;
-update = function(dt){
-  difficultyTick(dt);
-  _update_part2(dt);
-};
-
-/* =========================
-   7) 게임오버 payload 확장(온라인 연동 대비)
-========================= */
-const _buildRunPayload_part1 = buildRunPayload;
-buildRunPayload = function(){
-  const p = _buildRunPayload_part1();
-  p.score = state.score;
-  p.eliteKills = state.eliteKills;
-  p.version = "mini-survivor-v3";
-  return p;
-};
-
-/* =========================
-   8) 안정성: resetState에 누락된 값 있으면 보정
-========================= */
-const _resetState_part1 = resetState;
-resetState = function(){
-  _resetState_part1();
-
-  // Part2/3 확장 상태 값 보정
-  state.score = 0;
-  state.eliteKills = 0;
-
-  state.crit = state.crit ?? 0.06;
-  state.vamp = state.vamp ?? 0.02;
-
-  state.lastEliteName = "";
-  state._contactBonus = 0;
-
-  state.shootCdBase = 0;
-  state.shootCdPending = 0;
-  state.shootCdSynergy = new Map();
-};
-
-/* =========================
-   9) (요구 5 보완) "한발만 쏘는 느낌"을 더 줄이기 위해
-      기본 탄환을 '트윈샷' 옵션(확률)로 추가
-      - DPS는 크게 안 올리고 시각만 개선
-========================= */
-// ✅ (Part3) 트윈샷 수정: 프레임 확률 → 쿨다운 기반
-state._twinCd = 0;
-
-const _shootSystem_part2 = shootSystem;
-shootSystem = function(dt){
-  _shootSystem_part2(dt);
-
+setInterval(()=>{
   if (!state.running || state.paused) return;
-  if (state.character !== "ranged") return; // 닌자 제외 (필요하면 바꿔)
-
-  state._twinCd = Math.max(0, (state._twinCd||0) - dt);
-
-  // 초당 최대 2발(0.5초 쿨), 공격속도와 무관하게 "시각만"
-  if (state._twinCd > 0) return;
-  if (Math.random() > 0.35) return; // 체감만 조금
-
-  const t = nearestEnemy();
-  if (!t) return;
-
-  state._twinCd = 0.5;
-
-  const dmg = state.atk * 0.18; // DPS 과증가 방지
-  fireBulletFrom(player.x, player.y, t, dmg, 660, [], 0, 3, 1.1);
-};
-
-
-/* =========================
-   10) 접촉 피해 보너스 적용(난이도)
-   - Part2 hitPlayer 호출 시 dmg가 숫자로 오니, 그 앞에서 보정
-========================= */
-const _hitPlayer_part2 = hitPlayer;
-hitPlayer = function(dmg){
-  dmg = dmg + (state._contactBonus || 0);
-  _hitPlayer_part2(dmg);
-};
-
-
-/* =========================
-   (추가) 아이콘바 + 도감 UI
-   - Tab: 도감 토글
-   - 시너지/장비 스택을 아이콘+숫자로 표시
-========================= */
-const iconbarEl = document.getElementById("iconbar");
-const synIconsEl = document.getElementById("synIcons");
-const gearIconsEl = document.getElementById("gearIcons");
-const codexEl = document.getElementById("codex");
-const codexBody = document.getElementById("codexBody");
-
-// 색 팔레트(미니멀)
-const EL_COLOR = { water:"#55ccff", fire:"#ff8844", electric:"#ffd400", wind:"#88ffff", light:"#ffffff", dark:"#cc66ff" };
-const GEAR_COLOR = { saw:"#ddd", shield:"#66ffcc", blackhole:"#cc66ff", bombs:"#ffcc66", clone:"#ffffff", thorns:"#66ff66" };
-
-// 도감 정의(간단 버전): 양방향 키로 통일
-const SYNERGY_LIST = [
-  ["water","fire","smoke","연막(연막 안에서 적 접촉 무시)"],
-  ["water","electric","storm","전기장(도트)"],
-  ["water","wind","tornado","토네이도(도트+약 넉백)"],
-  ["water","light","plant","식물 소환(보조 사격)"],
-  ["water","dark","oil","오일(슬로우)"],
-
-  ["fire","electric","blast","폭발(짧은 범위 피해)"],
-  ["fire","wind","firevortex","불 소용돌이(도트)"],
-  ["fire","light","flare","플레어(짧은 범위 피해)"],
-  ["fire","dark","curseBoom","저주폭발(사망 시 폭발)"],
-
-  ["electric","wind","spark","스파크(전기 점)"],
-  ["electric","light","prism","프리즘(파편 사격)"],
-  ["electric","dark","darkbolt","다크볼트(짧은 볼트 피해)"],
-
-  ["wind","light","shards","빛 파편(보조 사격)"],
-  ["wind","dark","fear","공포(도망)"],
-  ["light","dark","eclipse","이클립스(슬로우+도트)"],
-
-  ["water","water","frost","냉기 장판(강 슬로우)"],
-  ["fire","fire","blast","연속 폭발"],
-  ["electric","electric","lightning","연속 낙뢰"],
-  ["wind","wind","gust","돌풍(넉백)"],
-  ["light","light","bless","축복(XP+식물)"],
-  ["dark","dark","wave","공포 파동"],
-];
-
-function dot(color){
-  return `<span class="dot" style="background:${color}"></span>`;
-}
-function ico(label, color, lv, evo=false){
-  return `<span class="ico ${evo?'evo':''}">${dot(color)}<span class="n">${label}</span><span class="lv">${lv}</span></span>`;
-}
-function buildIconBar(){
-  // 시너지
-  const syn = [];
-  for (const [k,lv] of state.synergyStacks.entries()){
-    if (lv<=0) continue;
-    const [a,b]=k.split("_");
-    const color = EL_COLOR[a] || "#ddd";
-    syn.push(ico(`${KR_EL[a]}+${KR_EL[b]}`, color, `x${lv}`, false));
+  if (state.elapsed > 120 && Math.random() < 0.35){
+    for(let i=0;i<3;i++) spawnEnemy();
   }
-  synIconsEl.innerHTML = syn.length ? syn.join("") : `<span class="small" style="opacity:.75">-</span>`;
-
-  // 장비
-  const gi = [];
-  for (const [id,lv] of state.gearLv.entries()){
-    if (lv<=0) continue;
-    const evo = lv>=5;
-    gi.push(ico(GEAR[id]?.name ?? id, GEAR_COLOR[id] || "#ddd", `Lv${lv}${evo?"★":""}`, evo));
-  }
-  gearIconsEl.innerHTML = gi.length ? gi.join("") : `<span class="small" style="opacity:.75">-</span>`;
-}
-
-// HUD 업데이트 시 함께 갱신
-const _updateHud_prev = updateHud;
-updateHud = function(){
-  _updateHud_prev();
-  buildIconBar();
-};
-
-// 도감(표) 생성
-function haveSynergy(a,b){
-  const k = [a,b].sort().join("_");
-  return (state.synergyStacks.get(k) ?? 0) > 0;
-}
-function buildCodex(){
-  let html = `<table><thead><tr><th>조합</th><th>상태</th><th>효과/힌트</th></tr></thead><tbody>`;
-  for (const [a,b,id,desc] of SYNERGY_LIST){
-    const got = haveSynergy(a,b);
-    const st = got ? `<span class="badge" style="border-color:#66ff66">획득</span>` : `<span class="badge" style="opacity:.7">미획득</span>`;
-    const mix = `${dot(EL_COLOR[a]||"#ddd")}${KR_EL[a]} + ${dot(EL_COLOR[b]||"#ddd")}${KR_EL[b]}`;
-    html += `<tr><td>${mix}</td><td>${st}</td><td>${desc}</td></tr>`;
-  }
-  html += `</tbody></table>`;
-  codexBody.innerHTML = html;
-}
-
-// Tab 토글: 게임 화면 가리지 않게 우하단 사이드바
-addEventListener("keydown", (e)=>{
-  if (e.key === "Tab"){
-    e.preventDefault();
-    const open = codexEl.style.display === "flex";
-    codexEl.style.display = open ? "none" : "flex";
-    if (!open) buildCodex();
-  }
-});
-
-
-/* =========================
-   (추가) 난이도/상호작용 패치
-   - 엘리트 저항: 공포/슬로우 저항(예시)
-   - 보스: 4분에 1회 등장(간단)
-   - 불완전 시너지(대기 원소 1개 패시브)
-   - 장비 Lv5 진화(효과 변화 + 아이콘 ★)
-   - 보스 상호작용: 블랙홀 pull 감소, 폭발 피해 캡
-========================= */
-
-// 엘리트 등장 문구(요구사항)
-const ELITE_NAME = { charger:"돌진자", splitter:"분열자", summoner:"소환사", bomber:"폭발자", waver:"파동자", sniper:"저격수", shielder:"실더", teleport:"텔레포터", vortex:"소용돌이술사", leaker:"장판술사", boss:"보스" };
-
-// spawnStageElite를 덮어써서 저항 세팅 추가
-const _spawnStageElite_prev = spawnStageElite;
-spawnStageElite = function(){
-  _spawnStageElite_prev();
-
-  // 방금 추가된 마지막 엘리트에 저항 부여
-  const e = enemies[enemies.length-1];
-  if (!e || !e.elite) return;
-
-  // 예시 저항(원하면 더 늘릴 수 있음)
-  if (e.type==="shielder"){ e.misc.fearImmune = true; }
-  if (e.type==="charger"){ e.misc.slowResist = 0.5; } // 슬로우 50%만
-  if (e.type==="teleport"){ e.misc.fearImmune = true; e.misc.slowResist = 0.35; }
-  if (e.type==="sniper"){ e.misc.slowResist = 0.65; }
-
-  showToast(`정예 등장: ${ELITE_NAME[e.type] ?? e.type}`, 1.2);
-};
-
-// 보스 1회 스폰(4:00)
-state._bossSpawned = false;
-function spawnBoss(){
-  const x = rand(120, canvas.width-120);
-  const y = -40;
-  spawnEnemyNear(x,y,{ elite:true, type:"boss", misc:{ boss:true, slowResist:0.75, fearImmune:true, blastCap:22 } });
-  const e = enemies[enemies.length-1];
-  if (e){
-    e.r = 34;
-    e.hp = 2400 + state.level*35;
-    e.spd = 92;
-    e.behavior="normal";
-  }
-  showToast("보스 출현!", 1.3);
-}
-const _update_prev_for_boss = update;
-update = function(dt){
-  // 보스 스폰 체크(원본 update 내부에 return 빠져서, 초반에만 끼워 넣음)
-  if (state.running && !state.paused && !state._bossSpawned && state.elapsed >= 240){
-    state._bossSpawned = true;
-    spawnBoss();
-  }
-  _update_prev_for_boss(dt);
-};
-
-function isBoss(e){ return !!(e && e.elite && (e.type==="boss" || e.misc?.boss)); }
-
-// 불완전 시너지(대기 원소 1개) : 기본탄에 아주 약하게 묻힘
-const _fireBulletTowards_prev = fireBulletTowards;
-fireBulletTowards = function(target, dmg, speed, tags, pierce, radius=4, life=2.1){
-  tags = tags ? [...tags] : [];
-  if (state.pendingEl && tags.length===0){
-    // 완성 시너지 탄환이 아닌 "기본탄"에만 약하게 적용
-    tags.push(state.pendingEl);
-    dmg *= 0.82; // 대신 약간 깎고
-  }
-  return _fireBulletTowards_prev(target, dmg, speed, tags, pierce, radius, life);
-};
-
-// 엘리트 저항 적용: onHitEnemy에서 slow/fear 줄이기
-const _onHitEnemy_prev = onHitEnemy;
-onHitEnemy = function(b,e){
-  _onHitEnemy_prev(b,e);
-
-  // 공포/슬로우 저항
-  if (e.elite){
-    if (e.misc?.fearImmune) e.fearT = 0;
-    const sr = e.misc?.slowResist;
-    if (sr != null && e.slowT>0) e.slowT *= (1 - sr);
-  }
-};
-
-// 보스 상호작용: 블랙홀 pull 감소 + 폭발 캡
-const _updateGearAuras_prev = updateGearAuras;
-updateGearAuras = function(dt){
-  _updateGearAuras_prev(dt);
-
-  // 블랙홀 pull이 eclipse meta pull로 들어가므로, 보스만 약하게
-  for (const f of fields){
-    if (f.kind!=="eclipse") continue;
-    const pull = f.meta.pull ?? 0;
-    if (!pull) continue;
-    for (const e of enemies){
-      if (!isBoss(e)) continue;
-      if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-        const v = norm(f.x - e.x, f.y - e.y);
-        e.x += v.x * pull * dt * 0.02; // 일반(0.08) 대비 감소
-        e.y += v.y * pull * dt * 0.02;
-      }
-    }
-  }
-};
-
-// 폭발/즉발 필드 피해 캡(보스만)
-const _updateFields_prev = updateFields;
-updateFields = function(dt){
-  _updateFields_prev(dt);
-
-  for (const f of fields){
-    if (!(f.kind==="blast" || f.kind==="flare" || f.kind==="darkbolt" || f.kind==="lightning")) continue;
-    for (const e of enemies){
-      if (!isBoss(e)) continue;
-      if (dist2(f.x,f.y,e.x,e.y) <= f.r*f.r){
-        const cap = e.misc?.blastCap ?? 20;
-        // 이미 updateFields에서 깎였으니, 추가로 더 깎이지 않게 보정(간단히 hp 하한을 올려줌)
-        // => 폭발이 너무 과도하게 반복될 때 체감 캡 역할
-        e.hp = Math.max(e.hp, e.hp + 0); // noop(구조 유지용)
-        // 실제 캡은 onHitEnemy의 blast direct dmg에서 처리하기 좋음. 아래에서 한 번 더.
-      }
-    }
-  }
-};
-
-// 장비 Lv5 진화: addGear를 덮어써서 변화
-const _addGear_prev = addGear;
-addGear = function(id){
-  _addGear_prev(id);
-  const lv = gearLevel(id);
-  if (lv === 5){
-    showToast(`진화! ${GEAR[id]?.name ?? id}`, 1.1);
-    // 진화 시 즉시 보너스
-    if (id==="shield") state.shieldCharges = Math.min(5, state.shieldCharges + 2);
-    if (id==="saw") state.atk += 2;
-    if (id==="clone") state.as += 0.15;
-  }
-};
-
-// 진화 효과를 실제 수치에 반영(원본 로직을 덮지 않고 "추가 가산"만)
-const _updateGearAuras_prev2 = updateGearAuras;
-updateGearAuras = function(dt){
-  _updateGearAuras_prev2(dt);
-
-  // saw 진화: 도트 조금 더
-  const sw = gearLevel("saw");
-  if (sw >= 5){
-    const r = 70 + sw*10;
-    for (const e of enemies){
-      if (dist2(player.x,player.y,e.x,e.y) <= r*r){
-        e.hp -= (dt * 1.3); // 추가 도트
-      }
-    }
-  }
-
-  // thorns 진화: 링 범위 확장 + 도트 추가
-  const th = gearLevel("thorns");
-  if (th >= 5){
-    const r = 44 + th*7;
-    for (const e of enemies){
-      if (dist2(player.x,player.y,e.x,e.y) <= r*r){
-        e.hp -= (dt * 1.0);
-      }
-    }
-  }
-
-  // blackhole 진화: 생성 주기 조금 단축
-  const bh = gearLevel("blackhole");
-  if (bh >= 5){
-    state._bhCd = Math.max(3.2, state._bhCd);
-  }
-};
-
+}, 6500);
 </script>
-
-<script type="module">
-  // Firebase Web SDK (modular)
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-  const firebaseConfig = {
-  "apiKey": "AIzaSyA_SyhZFH_d5Qc_6U0Fc2zag2pk8I2TRI0",
-  "authDomain": "survivor-24258.firebaseapp.com",
-  "projectId": "survivor-24258",
-  "storageBucket": "survivor-24258.firebasestorage.app",
-  "messagingSenderId": "338760669876",
-  "appId": "1:338760669876:web:473331e5938814c9e615e1",
-  "measurementId": "G-E3675VFT5K"
-};
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  // 익명 로그인(리더보드 쓰기 권한용)
-  // ※ Firebase 콘솔 > Authentication > Sign-in method에서 "익명"을 활성화해야 합니다.
-  window.__authOk = false;
-  signInAnonymously(auth)
-    .then(()=>{ window.__authOk = true; })
-    .catch((e)=>{ window.__authOk = false; console.warn("Anonymous auth disabled or misconfigured. Leaderboard write may not work.", e?.code || e); });
-
-  // ✅ 게임 스크립트에서 호출하는 함수들을 window에 노출
-  window.submitRun = async (payload) => {
-    // 최소 검증(클라) — 서버 규칙도 꼭 걸어야 함
-    const nickname = String(payload.nickname ?? "Player").slice(0, 16).trim() || "Player";
-    const character = (payload.character === "ninja") ? "ninja" : "ranged";
-    const doc = {
-      nickname,
-      character,
-      characterLabel: (character==="ninja") ? "닌자" : "원거리",
-      score: Math.floor(payload.score ?? 0),
-      kills: Math.floor(payload.kills ?? 0),
-      eliteKills: Math.floor(payload.eliteKills ?? 0),
-      level: Math.floor(payload.level ?? 1),
-      cleared: !!payload.cleared,
-      timePlayed: Math.floor(payload.timePlayed ?? 0),
-      // 선택: 빌드 기록(크면 제거해도 됨)
-      synergies: payload.synergies ?? [],
-      gears: payload.gears ?? [],
-      createdAt: serverTimestamp(),
-    };
-    await addDoc(collection(db, "runs"), doc);
-  };
-
-  window.fetchLeaderboard = async () => {
-    const q = query(collection(db, "runs"), orderBy("score", "desc"), orderBy("createdAt", "desc"), limit(20));
-    const snap = await getDocs(q);
-    const out = [];
-    snap.forEach(d => out.push(d.data()));
-    return out;
-  };
-</script>
-
-
-<div id="optionsPanel" style="position:fixed;top:10px;right:10px;z-index:9999;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px;font:12px/1.3 system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', sans-serif;">
-  <div style="font-weight:700;margin-bottom:8px;">옵션</div>
-  <label style="display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer;"><input id="optSfx" type="checkbox" checked> SFX</label>
-  <label style="display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer;"><input id="optBgm" type="checkbox" checked> BGM</label>
-</div>
-
 </body>
 </html>
